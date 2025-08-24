@@ -1,0 +1,38 @@
+# Exemplo de application-local.properties para Automo Backend
+# Copie este arquivo para src/main/resources/application-local.properties
+# e configure as variáveis conforme necessário
+
+# Database Configuration
+SPRING_JPA_HIBERNATE_DDL_AUTO=update
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/automo_db
+SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+SPRING_DATASOURCE_USERNAME=automo
+SPRING_DATASOURCE_PASSWORD=automo123
+SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+
+# JWT Configuration
+APPLICATION_SECURITY_JWT_SECRET_KEY=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+APPLICATION_SECURITY_JWT_EXPIRATION=86400000
+APPLICATION_SECURITY_JWT_REFRESH_TOKEN_EXPIRATION=604800000
+
+# Email Configuration
+SPRING_MAIL_HOST=smtp.gmail.com
+SPRING_MAIL_PORT=587
+SPRING_MAIL_USERNAME=no-reply@automo.com
+SPRING_MAIL_PASSWORD=your-app-password-here
+
+# SMS Configuration
+SMS_PROVIDER_ENABLED=false
+SMS_PROVIDER_API_KEY=your-sms-api-key-here
+SMS_PROVIDER_SENDER=AUTOMO
+
+# Admin Configuration
+DEFAULT_EMAIL_ADMIN=admin@automo.com
+DEFAULT_PASSWORD_ADMIN=admin123
+
+# OTP Configuration
+OTP_EXPIRATION_MINUTES=5
+OTP_CLEANUP_INTERVAL_MINUTES=10
+
+# Security Configuration
+SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:8080 

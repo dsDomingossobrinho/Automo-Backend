@@ -1,0 +1,79 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: automo-postgres
+    environment:
+      POSTGRES_DB: automo_db
+      POSTGRES_USER: automo
+      POSTGRES_PASSWORD: automo123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "automo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: automo-pgadmin
+    restart: always
+    ports:
+      - "8082:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@automo.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: automo-app
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/automo_db
+      SPRING_DATASOURCE_USERNAME: automo
+      SPRING_DATASOURCE_PASSWORD: automo123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      # Configurações de Email
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: no-reply@automo.com
+      SPRING_MAIL_PASSWORD: your-email-password
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: true
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: true
+      # Configurações de JWT
+      APPLICATION_SECURITY_JWT_SECRET_KEY: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      APPLICATION_SECURITY_JWT_EXPIRATION: 86400000
+      APPLICATION_SECURITY_JWT_REFRESH_TOKEN_EXPIRATION: 604800000
+      # Configurações de SMS
+      SMS_PROVIDER_ENABLED: false
+      SMS_PROVIDER_API_KEY: your-sms-api-key
+      SMS_PROVIDER_SENDER: AUTOMO
+      # Configurações de Admin
+      DEFAULT_EMAIL_ADMIN: admin@automo.com
+      DEFAULT_PASSWORD_ADMIN: admin123
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  postgres_data:
+  pgadmin_data: 
