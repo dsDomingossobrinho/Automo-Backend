@@ -37,7 +37,7 @@ services:
     image: ${IMAGE:-automo-app}:${TAG:-latest}
     container_name: automo-app-prod
     ports:
-      - "${HOST_PORT:-8081}:8080"
+      - "${HOST_PORT:-8080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
