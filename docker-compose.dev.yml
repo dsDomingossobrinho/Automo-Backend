@@ -38,7 +38,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: automo-app-dev
     ports:
-      - "8085:8080"
+      - "8090:8080"
       - "5005:5005" # Porta para debug remoto (opcional)
     depends_on:
       postgres:
