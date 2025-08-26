@@ -10,10 +10,11 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
 # Expor porta da aplicação
-EXPOSE 8080
+EXPOSE 8090
 
-# Healthcheck (opcional) - agora com wget, que existe na alpine
+# Healthcheck usando porta 8090
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
-  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
+  CMD wget -qO- http://localhost:8090/actuator/health || exit 1
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# Força o Spring Boot a rodar na porta 8090
+ENTRYPOINT ["java", "-jar", "/app/app.jar", "--server.port=8090"]
