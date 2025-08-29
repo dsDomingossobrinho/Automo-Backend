@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface AdminRepository extends JpaRepository<Admin, Long> {
     
+    // Métodos existentes
     List<Admin> findByStateId(Long stateId);
     Optional<Admin> findByEmail(String email);
     Optional<Admin> findByAuthId(Long authId);

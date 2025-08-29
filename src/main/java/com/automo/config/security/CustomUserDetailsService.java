@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,12 +24,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final AuthRolesRepository authRolesRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // Buscar usuário por email ou contato
         Auth auth = authRepository.findByEmailOrContact(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with identifier: " + username));
 
-        // Buscar roles através de AuthRoles
+        // Buscar roles através de AuthRoles (Role será carregado automaticamente com FetchType.EAGER)
         List<AuthRoles> authRoles = authRolesRepository.findByAuthId(auth.getId());
         
         return new User(

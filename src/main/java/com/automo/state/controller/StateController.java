@@ -40,6 +40,13 @@ public class StateController {
         return ResponseEntity.ok(stateService.getStateByIdResponse(id));
     }
 
+    @Operation(description = "Get state by name", summary = "Get a specific state by name")
+    @ApiResponse(responseCode = "200", description = "State retrieved successfully")
+    @GetMapping("/name/{stateName}")
+    public ResponseEntity<StateResponse> getStateByName(@PathVariable String stateName) {
+        return ResponseEntity.ok(stateService.getStateByIdResponse(stateService.getStateByState(stateName).getId()));
+    }
+
     @Operation(description = "Create new state", summary = "Create a new state (Admin only)")
     @ApiResponse(responseCode = "201", description = "State created successfully")
     @PostMapping
@@ -77,29 +84,4 @@ public class StateController {
         stateService.deleteState(id);
         return ResponseEntity.noContent().build();
     }
-
-    @Operation(description = "Get current user info", summary = "Get current user information from token")
-    @ApiResponse(responseCode = "200", description = "User information retrieved successfully")
-    @GetMapping("/user-info")
-    public ResponseEntity<UserInfoResponse> getCurrentUserInfo() {
-        UserInfoResponse userInfo = new UserInfoResponse(
-            jwtUtils.getCurrentUserId(),
-            jwtUtils.getCurrentUserEmail(),
-            jwtUtils.getCurrentUserRoleId(),
-            jwtUtils.getCurrentUserAccountTypeId(),
-            jwtUtils.isCurrentUserBackOffice(),
-            jwtUtils.isCurrentUserCorporate()
-        );
-        return ResponseEntity.ok(userInfo);
-    }
-
-    // Classe interna para resposta de informações do usuário
-    public record UserInfoResponse(
-        Long id,
-        String email,
-        Long roleId,
-        Long accountTypeId,
-        boolean isBackOffice,
-        boolean isCorporate
-    ) {}
 } 

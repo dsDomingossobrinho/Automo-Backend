@@ -82,13 +82,6 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public List<AdminResponse> getAdminsByState(Long stateId) {
-        return adminRepository.findByStateId(stateId).stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
-
-    @Override
     public AdminResponse getAdminByEmail(String email) {
         Admin admin = adminRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("Admin with email " + email + " not found"));

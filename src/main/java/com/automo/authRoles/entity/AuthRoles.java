@@ -24,7 +24,7 @@ public class AuthRoles extends AbstractModel {
     @NotNull(message = "Auth is required")
     private Auth auth;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     @NotNull(message = "Role is required")
     private Role role;

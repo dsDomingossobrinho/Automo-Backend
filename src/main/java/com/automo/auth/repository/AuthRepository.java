@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface AuthRepository extends JpaRepository<Auth, Long> {
     
+    // Métodos existentes
     Optional<Auth> findByEmail(String email);
     
     Optional<Auth> findByUsername(String username);

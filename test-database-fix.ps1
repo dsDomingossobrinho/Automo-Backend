@@ -58,3 +58,4 @@ Write-Host ""
 Write-Host "✅ Teste concluído!" -ForegroundColor Green
 Write-Host "   Se não houver mais erros 'FATAL: database \"automo\" does not exist'," -ForegroundColor White
 Write-Host "   a correção funcionou!" -ForegroundColor White
+

@@ -38,20 +38,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserByIdResponse(id));
     }
 
-    @Operation(description = "Get user by email", summary = "Get a specific user by email")
-    @ApiResponse(responseCode = "200", description = "User retrieved successfully")
-    @GetMapping("/email/{email}")
-    public ResponseEntity<UserResponse> getUserByEmail(@PathVariable String email) {
-        return ResponseEntity.ok(userService.getUserByEmail(email));
-    }
-
-    @Operation(description = "Get user by auth ID", summary = "Get a specific user by authentication ID")
-    @ApiResponse(responseCode = "200", description = "User retrieved successfully")
-    @GetMapping("/auth/{authId}")
-    public ResponseEntity<UserResponse> getUserByAuthId(@PathVariable Long authId) {
-        return ResponseEntity.ok(userService.getUserByAuthId(authId));
-    }
-
     @Operation(description = "Create new user", summary = "Create a new user")
     @ApiResponse(responseCode = "201", description = "User created successfully")
     @PostMapping
@@ -73,33 +59,5 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @Operation(description = "Get users by state", summary = "Get users filtered by state ID")
-    @ApiResponse(responseCode = "200", description = "Users retrieved successfully")
-    @GetMapping("/state/{stateId}")
-    public ResponseEntity<List<UserResponse>> getUsersByState(@PathVariable Long stateId) {
-        return ResponseEntity.ok(userService.getUsersByState(stateId));
-    }
-
-    @Operation(description = "Get users by country", summary = "Get users filtered by country ID")
-    @ApiResponse(responseCode = "200", description = "Users retrieved successfully")
-    @GetMapping("/country/{countryId}")
-    public ResponseEntity<List<UserResponse>> getUsersByCountry(@PathVariable Long countryId) {
-        return ResponseEntity.ok(userService.getUsersByCountry(countryId));
-    }
-
-    @Operation(description = "Get users by organization type", summary = "Get users filtered by organization type ID")
-    @ApiResponse(responseCode = "200", description = "Users retrieved successfully")
-    @GetMapping("/organization-type/{organizationTypeId}")
-    public ResponseEntity<List<UserResponse>> getUsersByOrganizationType(@PathVariable Long organizationTypeId) {
-        return ResponseEntity.ok(userService.getUsersByOrganizationType(organizationTypeId));
-    }
-
-    @Operation(description = "Get users by province", summary = "Get users filtered by province ID")
-    @ApiResponse(responseCode = "200", description = "Users retrieved successfully")
-    @GetMapping("/province/{provinceId}")
-    public ResponseEntity<List<UserResponse>> getUsersByProvince(@PathVariable Long provinceId) {
-        return ResponseEntity.ok(userService.getUsersByProvince(provinceId));
     }
 } 

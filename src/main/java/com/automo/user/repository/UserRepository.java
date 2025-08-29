@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     
+    // Métodos existentes
     List<User> findByStateId(Long stateId);
     List<User> findByCountryId(Long countryId);
     List<User> findByOrganizationTypeId(Long organizationTypeId);

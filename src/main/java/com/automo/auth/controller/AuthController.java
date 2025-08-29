@@ -5,7 +5,6 @@ import com.automo.auth.dto.RegisterRequest;
 import com.automo.auth.dto.OtpRequest;
 import com.automo.auth.dto.OtpVerificationRequest;
 import com.automo.auth.service.AuthService;
-import com.automo.config.security.JwtUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtUtils jwtUtils;
 
     @Operation(description = "Request OTP for general authentication", summary = "Request OTP code for user authentication")
     @ApiResponse(responseCode = "200", description = "OTP sent successfully")
@@ -72,25 +70,10 @@ public class AuthController {
         return ResponseEntity.ok(authService.register(request));
     }
 
-    @Operation(description = "Get current user info from token", summary = "Get current user information from JWT token")
-    @ApiResponse(responseCode = "200", description = "User information retrieved successfully")
-    @GetMapping("/me")
-    public ResponseEntity<UserInfoResponse> getCurrentUserInfo() {
-        UserInfoResponse userInfo = new UserInfoResponse(
-            jwtUtils.getCurrentUserId(),
-            jwtUtils.getCurrentUserEmail(),
-            jwtUtils.getCurrentUserContact(),
-            jwtUtils.getCurrentUsername(),
-            jwtUtils.getCurrentUserRoleId(),
-            jwtUtils.getCurrentUserRoleIds(),
-            jwtUtils.getCurrentUserAccountTypeId(),
-            jwtUtils.isCurrentUserBackOffice(),
-            jwtUtils.isCurrentUserCorporate(),
-            jwtUtils.isCurrentUserAdmin(),
-            jwtUtils.isCurrentUserAgent(),
-            jwtUtils.isCurrentUserManager()
-        );
-        return ResponseEntity.ok(userInfo);
+    @Operation(description = "Simple test endpoint without Swagger annotations", summary = "Simple test")
+    @PostMapping("/simple-test")
+    public ResponseEntity<String> simpleTest() {
+        return ResponseEntity.ok("This is a simple test endpoint without Swagger annotations.");
     }
 
     // Classe interna para resposta de informações do usuário

@@ -8,27 +8,43 @@ import java.util.List;
 
 public interface UserService {
 
+    /**
+     * Cria um novo usuário
+     */
     UserResponse createUser(UserDto userDto);
 
+    /**
+     * Atualiza um usuário existente
+     */
     UserResponse updateUser(Long id, UserDto userDto);
 
+    /**
+     * Obtém todos os usuários
+     */
     List<UserResponse> getAllUsers();
 
+    /**
+     * Obtém usuário por ID
+     */
     User getUserById(Long id);
 
+    /**
+     * Obtém usuário por ID com resposta DTO
+     */
     UserResponse getUserByIdResponse(Long id);
 
-    List<UserResponse> getUsersByState(Long stateId);
-
-    List<UserResponse> getUsersByCountry(Long countryId);
-
-    List<UserResponse> getUsersByOrganizationType(Long organizationTypeId);
-
-    List<UserResponse> getUsersByProvince(Long provinceId);
-
+    /**
+     * Obtém usuário por email
+     */
     UserResponse getUserByEmail(String email);
 
+    /**
+     * Obtém usuário por ID de autenticação
+     */
     UserResponse getUserByAuthId(Long authId);
 
+    /**
+     * Deleta um usuário
+     */
     void deleteUser(Long id);
 } 

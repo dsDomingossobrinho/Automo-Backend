@@ -18,7 +18,13 @@ public interface StateService {
 
     StateResponse getStateByIdResponse(Long id);
 
+    /**
+     * Obtém estado por nome do estado
+     */
     State getStateByState(String state);
 
+    /**
+     * Deleta um estado
+     */
     void deleteState(Long id);
 } 

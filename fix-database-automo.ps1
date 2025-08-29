@@ -62,3 +62,4 @@ Write-Host "   ✅ docker-compose-postgres.yml: cria automo_db" -ForegroundColor
 Write-Host ""
 Write-Host "✅ Correção concluída!" -ForegroundColor Green
 Write-Host "   Use: docker-compose -f docker-compose-postgres.yml up --build" -ForegroundColor White
+

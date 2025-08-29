@@ -115,6 +115,36 @@ public class IdentifierServiceImpl implements IdentifierService {
         identifierRepository.deleteById(id);
     }
 
+    @Override
+    public void createIdentifierForEntity(Long userId, String entityType, Long stateId) {
+        try {
+            // Buscar tipo de identifier padrão para a entidade
+            IdentifierType identifierType = identifierTypeRepository.findByType(entityType)
+                    .orElseGet(() -> {
+                        // Se não existir, criar um tipo padrão
+                        IdentifierType defaultType = new IdentifierType();
+                        defaultType.setType(entityType);
+                        defaultType.setDescription(entityType + " identifier");
+                        return identifierTypeRepository.save(defaultType);
+                    });
+
+            // Buscar o estado
+            State state = stateRepository.findById(stateId)
+                    .orElseThrow(() -> new EntityNotFoundException("State with ID " + stateId + " not found"));
+
+            // Criar identifier
+            Identifier identifier = new Identifier();
+            identifier.setUserId(userId);
+            identifier.setIdentifierType(identifierType);
+            identifier.setState(state);
+
+            identifierRepository.save(identifier);
+        } catch (Exception e) {
+            // Log do erro mas não falhar a criação da entidade principal
+            System.err.println("Error creating identifier for " + entityType + " with userId " + userId + ": " + e.getMessage());
+        }
+    }
+
     private IdentifierResponse mapToResponse(Identifier identifier) {
         // Buscar o usuário para obter o nome
         User user = userRepository.findById(identifier.getUserId())

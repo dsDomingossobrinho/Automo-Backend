@@ -38,20 +38,6 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAdminByIdResponse(id));
     }
 
-    @Operation(description = "Get admin by email", summary = "Get a specific admin by email")
-    @ApiResponse(responseCode = "200", description = "Admin retrieved successfully")
-    @GetMapping("/email/{email}")
-    public ResponseEntity<AdminResponse> getAdminByEmail(@PathVariable String email) {
-        return ResponseEntity.ok(adminService.getAdminByEmail(email));
-    }
-
-    @Operation(description = "Get admin by auth ID", summary = "Get a specific admin by authentication ID")
-    @ApiResponse(responseCode = "200", description = "Admin retrieved successfully")
-    @GetMapping("/auth/{authId}")
-    public ResponseEntity<AdminResponse> getAdminByAuthId(@PathVariable Long authId) {
-        return ResponseEntity.ok(adminService.getAdminByAuthId(authId));
-    }
-
     @Operation(description = "Create new admin", summary = "Create a new admin")
     @ApiResponse(responseCode = "201", description = "Admin created successfully")
     @PostMapping
@@ -73,12 +59,5 @@ public class AdminController {
     public ResponseEntity<Void> deleteAdmin(@PathVariable Long id) {
         adminService.deleteAdmin(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @Operation(description = "Get admins by state", summary = "Get admins filtered by state ID")
-    @ApiResponse(responseCode = "200", description = "Admins retrieved successfully")
-    @GetMapping("/state/{stateId}")
-    public ResponseEntity<List<AdminResponse>> getAdminsByState(@PathVariable Long stateId) {
-        return ResponseEntity.ok(adminService.getAdminsByState(stateId));
     }
 } 

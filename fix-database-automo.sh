@@ -56,3 +56,4 @@ echo "   ✅ docker-compose-postgres.yml: cria automo_db"
 echo ""
 echo "✅ Correção concluída!"
 echo "   Use: docker-compose -f docker-compose-postgres.yml up --build"
+

@@ -25,4 +25,7 @@ public interface IdentifierService {
     List<IdentifierResponse> getIdentifiersByType(Long identifierTypeId);
 
     void deleteIdentifier(Long id);
+
+    // Novo método para criar identifier automaticamente
+    void createIdentifierForEntity(Long userId, String entityType, Long stateId);
 } 

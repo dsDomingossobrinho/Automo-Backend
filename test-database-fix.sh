@@ -52,3 +52,4 @@ echo ""
 echo "✅ Teste concluído!"
 echo "   Se não houver mais erros 'FATAL: database \"automo\" does not exist',"
 echo "   a correção funcionou!"
+
