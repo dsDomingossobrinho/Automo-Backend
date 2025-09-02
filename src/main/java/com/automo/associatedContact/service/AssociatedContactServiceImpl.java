@@ -66,7 +66,7 @@ public class AssociatedContactServiceImpl implements AssociatedContactService {
     @Override
     @Transactional(readOnly = true)
     public List<AssociatedContactResponse> getAllAssociatedContacts() {
-        return associatedContactRepository.findAll().stream()
+        return associatedContactRepository.findAllWithIdentifierAndState().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -81,14 +81,15 @@ public class AssociatedContactServiceImpl implements AssociatedContactService {
     @Override
     @Transactional(readOnly = true)
     public AssociatedContactResponse getAssociatedContactByIdResponse(Long id) {
-        AssociatedContact associatedContact = getAssociatedContactById(id);
+        AssociatedContact associatedContact = associatedContactRepository.findByIdWithIdentifierAndState(id)
+                .orElseThrow(() -> new RuntimeException("AssociatedContact not found"));
         return mapToResponse(associatedContact);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AssociatedContactResponse> getAssociatedContactsByIdentifier(Long identifierId) {
-        return associatedContactRepository.findByIdentifierId(identifierId).stream()
+        return associatedContactRepository.findByIdentifierIdWithIdentifierAndState(identifierId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -96,7 +97,7 @@ public class AssociatedContactServiceImpl implements AssociatedContactService {
     @Override
     @Transactional(readOnly = true)
     public List<AssociatedContactResponse> getAssociatedContactsByState(Long stateId) {
-        return associatedContactRepository.findByStateId(stateId).stream()
+        return associatedContactRepository.findByStateIdWithIdentifierAndState(stateId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

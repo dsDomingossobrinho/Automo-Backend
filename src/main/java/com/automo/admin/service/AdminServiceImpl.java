@@ -64,14 +64,14 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public List<AdminResponse> getAllAdmins() {
-        return adminRepository.findAll().stream()
+        return adminRepository.findAllWithAuthAndState().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Admin getAdminById(Long id) {
-        return adminRepository.findById(id)
+        return adminRepository.findByIdWithAuthAndState(id)
                 .orElseThrow(() -> new EntityNotFoundException("Admin with ID " + id + " not found"));
     }
 
@@ -83,14 +83,14 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public AdminResponse getAdminByEmail(String email) {
-        Admin admin = adminRepository.findByEmail(email)
+        Admin admin = adminRepository.findByEmailWithAuthAndState(email)
                 .orElseThrow(() -> new EntityNotFoundException("Admin with email " + email + " not found"));
         return mapToResponse(admin);
     }
 
     @Override
     public AdminResponse getAdminByAuthId(Long authId) {
-        Admin admin = adminRepository.findByAuthId(authId)
+        Admin admin = adminRepository.findByAuthIdWithAuthAndState(authId)
                 .orElseThrow(() -> new EntityNotFoundException("Admin with auth ID " + authId + " not found"));
         return mapToResponse(admin);
     }

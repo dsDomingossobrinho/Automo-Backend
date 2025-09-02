@@ -61,7 +61,7 @@ public class AgentProductServiceImpl implements AgentProductService {
     @Override
     @Transactional(readOnly = true)
     public List<AgentProductResponse> getAllAgentProducts() {
-        return agentProductRepository.findAll().stream()
+        return agentProductRepository.findAllWithAgentAndProduct().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -76,14 +76,15 @@ public class AgentProductServiceImpl implements AgentProductService {
     @Override
     @Transactional(readOnly = true)
     public AgentProductResponse getAgentProductByIdResponse(Long id) {
-        AgentProduct agentProduct = getAgentProductById(id);
+        AgentProduct agentProduct = agentProductRepository.findByIdWithAgentAndProduct(id)
+                .orElseThrow(() -> new RuntimeException("AgentProduct not found"));
         return mapToResponse(agentProduct);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AgentProductResponse> getAgentProductsByAgent(Long agentId) {
-        return agentProductRepository.findByAgentId(agentId).stream()
+        return agentProductRepository.findByAgentIdWithAgentAndProduct(agentId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -91,7 +92,7 @@ public class AgentProductServiceImpl implements AgentProductService {
     @Override
     @Transactional(readOnly = true)
     public List<AgentProductResponse> getAgentProductsByProduct(Long productId) {
-        return agentProductRepository.findByProductId(productId).stream()
+        return agentProductRepository.findByProductIdWithAgentAndProduct(productId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -99,7 +100,7 @@ public class AgentProductServiceImpl implements AgentProductService {
     @Override
     @Transactional(readOnly = true)
     public AgentProductResponse getAgentProductByAgentAndProduct(Long agentId, Long productId) {
-        AgentProduct agentProduct = agentProductRepository.findByAgentIdAndProductId(agentId, productId)
+        AgentProduct agentProduct = agentProductRepository.findByAgentIdAndProductIdWithAgentAndProduct(agentId, productId)
                 .orElseThrow(() -> new RuntimeException("AgentProduct not found"));
         return mapToResponse(agentProduct);
     }

@@ -223,11 +223,10 @@ public class AuthServiceImpl implements AuthService {
             throw InvalidCredentialsException.create();
         }
 
-        // Gerar tokens
+        // Gerar token
         String accessToken = jwtService.generateTokenForAuth(auth);
-        String refreshToken = jwtService.generateRefreshTokenForAuth(auth);
         
-        return new LoginResponse(accessToken, refreshToken);
+        return new LoginResponse(accessToken);
     }
 
     @Override

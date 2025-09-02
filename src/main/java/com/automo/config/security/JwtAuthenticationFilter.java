@@ -42,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         
-        jwt = authHeader.substring(7);
+        jwt = authHeader.substring(7).trim();
         log.debug("JWT Filter - JWT Token extracted: {}...", jwt.substring(0, Math.min(jwt.length(), 20)));
         
         userEmail = jwtService.extractUsername(jwt);

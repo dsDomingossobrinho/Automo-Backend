@@ -87,7 +87,7 @@ public class DealServiceImpl implements DealService {
 
     @Override
     public List<DealResponse> getAllDeals() {
-        return dealRepository.findAll().stream()
+        return dealRepository.findAllWithRelations().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -100,34 +100,35 @@ public class DealServiceImpl implements DealService {
 
     @Override
     public DealResponse getDealByIdResponse(Long id) {
-        Deal deal = this.getDealById(id);
+        Deal deal = dealRepository.findByIdWithRelations(id)
+                .orElseThrow(() -> new EntityNotFoundException("Deal with ID " + id + " not found"));
         return mapToResponse(deal);
     }
 
     @Override
     public List<DealResponse> getDealsByState(Long stateId) {
-        return dealRepository.findByStateId(stateId).stream()
+        return dealRepository.findByStateIdWithRelations(stateId).stream()
                 .map(this::mapToResponse)
                 .toList();
     }
 
     @Override
     public List<DealResponse> getDealsByIdentifier(Long identifierId) {
-        return dealRepository.findByIdentifierId(identifierId).stream()
+        return dealRepository.findByIdentifierIdWithRelations(identifierId).stream()
                 .map(this::mapToResponse)
                 .toList();
     }
 
     @Override
     public List<DealResponse> getDealsByLead(Long leadId) {
-        return dealRepository.findByLeadId(leadId).stream()
+        return dealRepository.findByLeadIdWithRelations(leadId).stream()
                 .map(this::mapToResponse)
                 .toList();
     }
 
     @Override
     public List<DealResponse> getDealsByPromotion(Long promotionId) {
-        return dealRepository.findByPromotionId(promotionId).stream()
+        return dealRepository.findByPromotionIdWithRelations(promotionId).stream()
                 .map(this::mapToResponse)
                 .toList();
     }

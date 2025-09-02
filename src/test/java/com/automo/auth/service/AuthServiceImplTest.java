@@ -56,19 +56,17 @@ class AuthServiceImplTest {
         when(authRepository.findByEmailOrUsernameOrContact(any())).thenReturn(Optional.of(testAuth));
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
         when(jwtService.generateTokenForAuth(any())).thenReturn("jwt-token");
-        when(jwtService.generateRefreshTokenForAuth(any())).thenReturn("refresh-token");
 
         // Act
         LoginResponse response = authService.authenticate(loginRequest);
 
         // Assert
         assertNotNull(response);
-        assertEquals("jwt-token", response.accessToken());
-        assertEquals("refresh-token", response.refreshToken());
+        assertEquals("jwt-token", response.token());
         verify(authRepository).findByEmailOrUsernameOrContact("test@example.com");
         verify(passwordEncoder).matches("rawPassword", "encodedPassword");
         verify(jwtService).generateTokenForAuth(testAuth);
-        verify(jwtService).generateRefreshTokenForAuth(testAuth);
+        verify(jwtService, never()).generateRefreshTokenForAuth(any());
     }
 
     @Test

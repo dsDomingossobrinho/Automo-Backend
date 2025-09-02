@@ -53,8 +53,10 @@ public class OpenApiConfig {
     private List<Tag> getTagsInAlphabeticalOrder() {
         List<Tag> tags = new ArrayList<>();
         
-        // Todas as tags em ordem alfabética pura
+        // Authentication first, then alphabetical order
         tags.add(new Tag().name("Authentication").description("Authentication management APIs"));
+        
+        // All other tags in alphabetical order
         tags.add(new Tag().name("Account Types").description("Account type management APIs"));
         tags.add(new Tag().name("Admins").description("Admin management APIs"));
         tags.add(new Tag().name("Agent Areas").description("Agent Areas management endpoints"));
@@ -67,8 +69,8 @@ public class OpenApiConfig {
         tags.add(new Tag().name("Countries").description("Country management APIs"));
         tags.add(new Tag().name("Deal Products").description("Deal Product management APIs"));
         tags.add(new Tag().name("Deals").description("Deal management APIs"));
-        tags.add(new Tag().name("Identifiers").description("Identifier management APIs"));
         tags.add(new Tag().name("Identifier Types").description("Identifier type management APIs"));
+        tags.add(new Tag().name("Identifiers").description("Identifier management APIs"));
         tags.add(new Tag().name("Lead Types").description("Lead type management APIs"));
         tags.add(new Tag().name("Leads").description("Lead management APIs"));
         tags.add(new Tag().name("Message Counts").description("Message count management APIs"));

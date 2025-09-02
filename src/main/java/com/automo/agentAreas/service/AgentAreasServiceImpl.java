@@ -74,7 +74,7 @@ public class AgentAreasServiceImpl implements AgentAreasService {
     @Override
     @Transactional(readOnly = true)
     public List<AgentAreasResponse> getAllAgentAreas() {
-        return agentAreasRepository.findAll().stream()
+        return agentAreasRepository.findAllWithAgentAreaAndState().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -89,14 +89,15 @@ public class AgentAreasServiceImpl implements AgentAreasService {
     @Override
     @Transactional(readOnly = true)
     public AgentAreasResponse getAgentAreasByIdResponse(Long id) {
-        var agentAreas = this.getAgentAreasById(id);
+        var agentAreas = agentAreasRepository.findByIdWithAgentAreaAndState(id)
+                .orElseThrow(() -> new EntityNotFoundException("AgentAreas with ID " + id + " not found"));
         return mapToResponse(agentAreas);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AgentAreasResponse> getAgentAreasByAgent(Long agentId) {
-        return agentAreasRepository.findByAgentId(agentId).stream()
+        return agentAreasRepository.findByAgentIdWithAgentAreaAndState(agentId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -104,7 +105,7 @@ public class AgentAreasServiceImpl implements AgentAreasService {
     @Override
     @Transactional(readOnly = true)
     public List<AgentAreasResponse> getAgentAreasByArea(Long areaId) {
-        return agentAreasRepository.findByAreaId(areaId).stream()
+        return agentAreasRepository.findByAreaIdWithAgentAreaAndState(areaId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -112,7 +113,7 @@ public class AgentAreasServiceImpl implements AgentAreasService {
     @Override
     @Transactional(readOnly = true)
     public List<AgentAreasResponse> getAgentAreasByState(Long stateId) {
-        return agentAreasRepository.findByStateId(stateId).stream()
+        return agentAreasRepository.findByStateIdWithAgentAreaAndState(stateId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

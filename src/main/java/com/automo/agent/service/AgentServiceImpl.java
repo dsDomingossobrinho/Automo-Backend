@@ -59,7 +59,7 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     public List<AgentResponse> getAllAgents() {
-        return agentRepository.findAll().stream()
+        return agentRepository.findAllWithState().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -72,13 +72,14 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     public AgentResponse getAgentByIdResponse(Long id) {
-        Agent agent = this.getAgentById(id);
+        Agent agent = agentRepository.findByIdWithState(id)
+                .orElseThrow(() -> new EntityNotFoundException("Agent with ID " + id + " not found"));
         return mapToResponse(agent);
     }
 
     @Override
     public List<AgentResponse> getAgentsByState(Long stateId) {
-        return agentRepository.findByStateId(stateId).stream()
+        return agentRepository.findByStateIdWithState(stateId).stream()
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -92,7 +93,7 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     public List<AgentResponse> searchAgentsByName(String name) {
-        return agentRepository.findByNameContainingIgnoreCase(name).stream()
+        return agentRepository.findByNameContainingIgnoreCaseWithState(name).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
