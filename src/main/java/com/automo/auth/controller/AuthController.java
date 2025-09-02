@@ -4,6 +4,8 @@ import com.automo.auth.dto.AuthResponse;
 import com.automo.auth.dto.RegisterRequest;
 import com.automo.auth.dto.OtpRequest;
 import com.automo.auth.dto.OtpVerificationRequest;
+import com.automo.auth.dto.LoginRequest;
+import com.automo.auth.dto.LoginResponse;
 import com.automo.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,6 +22,13 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+
+    @Operation(description = "Direct login without OTP", summary = "Authenticate user directly with credentials")
+    @ApiResponse(responseCode = "200", description = "User authenticated successfully")
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.authenticate(request));
+    }
 
     @Operation(description = "Request OTP for general authentication", summary = "Request OTP code for user authentication")
     @ApiResponse(responseCode = "200", description = "OTP sent successfully")

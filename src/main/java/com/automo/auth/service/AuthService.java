@@ -4,6 +4,11 @@ import com.automo.auth.dto.AuthResponse;
 import com.automo.auth.dto.RegisterRequest;
 import com.automo.auth.dto.OtpRequest;
 import com.automo.auth.dto.OtpVerificationRequest;
+import com.automo.auth.dto.LoginRequest;
+import com.automo.auth.dto.LoginResponse;
+import com.automo.auth.entity.Auth;
+
+import java.util.Optional;
 
 public interface AuthService {
 
@@ -41,4 +46,14 @@ public interface AuthService {
      * Verifica OTP e autentica usuário
      */
     AuthResponse verifyOtpAndAuthenticateUser(OtpVerificationRequest request);
+
+    /**
+     * Autentica usuário com login direto (sem OTP)
+     */
+    LoginResponse authenticate(LoginRequest request);
+
+    /**
+     * Busca usuário por email, username ou contato
+     */
+    Optional<Auth> findByEmailOrUsernameOrContact(String emailOrContact);
 } 

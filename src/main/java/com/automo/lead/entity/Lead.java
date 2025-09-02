@@ -14,7 +14,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "leads")
+@Table(name = "leads", indexes = {
+    @Index(name = "idx_lead_email", columnList = "email"),
+    @Index(name = "idx_lead_name", columnList = "name"),
+    @Index(name = "idx_lead_contact", columnList = "contact"),
+    @Index(name = "idx_lead_zone", columnList = "zone"),
+    @Index(name = "idx_lead_identifier", columnList = "identifier_id"),
+    @Index(name = "idx_lead_type", columnList = "lead_type_id"),
+    @Index(name = "idx_lead_state", columnList = "state_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor

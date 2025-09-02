@@ -4,12 +4,17 @@ import com.automo.auth.dto.AuthResponse;
 import com.automo.auth.dto.RegisterRequest;
 import com.automo.auth.dto.OtpRequest;
 import com.automo.auth.dto.OtpVerificationRequest;
+import com.automo.auth.dto.LoginRequest;
+import com.automo.auth.dto.LoginResponse;
 import com.automo.auth.entity.Auth;
 import com.automo.auth.repository.AuthRepository;
 import com.automo.auth.util.ContactValidator;
 import com.automo.authRoles.entity.AuthRoles;
 import com.automo.authRoles.repository.AuthRolesRepository;
 import com.automo.config.security.JwtService;
+import com.automo.exception.UserAlreadyExistsException;
+import com.automo.exception.UserNotFoundException;
+import com.automo.exception.InvalidCredentialsException;
 import com.automo.role.entity.Role;
 import com.automo.role.repository.RoleRepository;
 import com.automo.state.entity.State;
@@ -19,6 +24,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,16 +43,18 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse register(RegisterRequest request) {
         // Check if user already exists
-        if (authRepository.existsByEmail(request.email()) ||
-            authRepository.existsByContact(request.contact())) {
-            throw new RuntimeException("User already exists with this email or contact");
+        if (authRepository.existsByEmail(request.email())) {
+            throw UserAlreadyExistsException.withEmail(request.email());
+        }
+        if (authRepository.existsByContact(request.contact())) {
+            throw UserAlreadyExistsException.withContact(request.contact());
         }
 
         // Get default role and state
         Role role = roleRepository.findByRole("USER")
-                .orElseThrow(() -> new RuntimeException("Default role not found"));
+                .orElseThrow(() -> new IllegalStateException("Default USER role not found"));
         State state = stateRepository.findByState("ACTIVE")
-                .orElseThrow(() -> new RuntimeException("Default state not found"));
+                .orElseThrow(() -> new IllegalStateException("Default ACTIVE state not found"));
 
         // Create new auth user
         Auth auth = new Auth();
@@ -65,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
         authRolesRepository.save(authRoles);
 
         // Generate token
-        String token = jwtService.generateToken(auth);
+        String token = jwtService.generateTokenForAuth(auth);
         return new AuthResponse(token, "User registered successfully", false);
     }
 
@@ -73,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse requestOtp(OtpRequest request) {
         // Buscar usuário por email ou contato
         Auth auth = authRepository.findByEmailOrContact(request.emailOrContact())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> UserNotFoundException.byEmailOrContact(request.emailOrContact()));
 
         // Autenticar com o email encontrado
         authenticationManager.authenticate(
@@ -95,15 +104,15 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse verifyOtpAndAuthenticate(OtpVerificationRequest request) {
         // Verificar OTP
         if (!otpService.verifyOtp(request.contact(), request.otpCode(), "LOGIN")) {
-            throw new RuntimeException("Invalid or expired OTP code");
+            throw InvalidCredentialsException.expiredToken();
         }
 
         // Buscar usuário (por email ou contato)
         Auth auth = authRepository.findByEmailOrContact(request.contact())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> UserNotFoundException.byEmailOrContact(request.contact()));
 
         // Gerar token
-        String token = jwtService.generateToken(auth);
+        String token = jwtService.generateTokenForAuth(auth);
         return new AuthResponse(token, "Authentication successful", false);
     }
 
@@ -111,7 +120,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse authenticateBackOffice(OtpRequest request) {
         // Buscar usuário por email ou contato
         Auth auth = authRepository.findByEmailOrContact(request.emailOrContact())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> UserNotFoundException.byEmailOrContact(request.emailOrContact()));
 
         // Autenticar com o email encontrado
         authenticationManager.authenticate(
@@ -119,8 +128,8 @@ public class AuthServiceImpl implements AuthService {
         );
 
         // Verificar se o usuário tem tipo_conta_id = 1 (INDIVIDUAL - Back Office)
-        if (auth.getAccountType().getId() != 1) {
-            throw new RuntimeException("Access denied. Only back office users can access this endpoint.");
+        if (auth.getAccountType() == null || !auth.getAccountType().getId().equals(1L)) {
+            throw new IllegalArgumentException("Access denied. Only back office users can access this endpoint.");
         }
 
         // Gerar e enviar OTP (detecta automaticamente se é email ou telefone)
@@ -138,20 +147,20 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse verifyOtpAndAuthenticateBackOffice(OtpVerificationRequest request) {
         // Verificar OTP
         if (!otpService.verifyOtp(request.contact(), request.otpCode(), "LOGIN_BACKOFFICE")) {
-            throw new RuntimeException("Invalid or expired OTP code");
+            throw InvalidCredentialsException.expiredToken();
         }
 
         // Buscar usuário (por email ou contato)
         Auth auth = authRepository.findByEmailOrContact(request.contact())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> UserNotFoundException.byEmailOrContact(request.contact()));
 
         // Verificar se o usuário tem tipo_conta_id = 1 (INDIVIDUAL - Back Office)
-        if (auth.getAccountType().getId() != 1) {
-            throw new RuntimeException("Access denied. Only back office users can access this endpoint.");
+        if (auth.getAccountType() == null || !auth.getAccountType().getId().equals(1L)) {
+            throw new IllegalArgumentException("Access denied. Only back office users can access this endpoint.");
         }
 
         // Gerar token
-        String token = jwtService.generateToken(auth);
+        String token = jwtService.generateTokenForAuth(auth);
         return new AuthResponse(token, "Back office authentication successful", false);
     }
 
@@ -159,7 +168,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse authenticateUser(OtpRequest request) {
         // Buscar usuário por email ou contato
         Auth auth = authRepository.findByEmailOrContact(request.emailOrContact())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> UserNotFoundException.byEmailOrContact(request.emailOrContact()));
 
         // Autenticar com o email encontrado
         authenticationManager.authenticate(
@@ -167,8 +176,8 @@ public class AuthServiceImpl implements AuthService {
         );
 
         // Verificar se o usuário tem tipo_conta_id = 2 (CORPORATE - Usuários)
-        if (auth.getAccountType().getId() != 2) {
-            throw new RuntimeException("Access denied. Only regular users can access this endpoint.");
+        if (auth.getAccountType() == null || !auth.getAccountType().getId().equals(2L)) {
+            throw new IllegalArgumentException("Access denied. Only regular users can access this endpoint.");
         }
 
         // Gerar e enviar OTP (detecta automaticamente se é email ou telefone)
@@ -186,20 +195,43 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse verifyOtpAndAuthenticateUser(OtpVerificationRequest request) {
         // Verificar OTP
         if (!otpService.verifyOtp(request.contact(), request.otpCode(), "LOGIN_USER")) {
-            throw new RuntimeException("Invalid or expired OTP code");
+            throw InvalidCredentialsException.expiredToken();
         }
 
         // Buscar usuário (por email ou contato)
         Auth auth = authRepository.findByEmailOrContact(request.contact())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> UserNotFoundException.byEmailOrContact(request.contact()));
 
         // Verificar se o usuário tem tipo_conta_id = 2 (CORPORATE - Usuários)
-        if (auth.getAccountType().getId() != 2) {
-            throw new RuntimeException("Access denied. Only regular users can access this endpoint.");
+        if (auth.getAccountType() == null || !auth.getAccountType().getId().equals(2L)) {
+            throw new IllegalArgumentException("Access denied. Only regular users can access this endpoint.");
         }
 
         // Gerar token
-        String token = jwtService.generateToken(auth);
+        String token = jwtService.generateTokenForAuth(auth);
         return new AuthResponse(token, "User authentication successful", false);
+    }
+
+    @Override
+    public LoginResponse authenticate(LoginRequest request) {
+        // Buscar usuário por email, username ou contato
+        Auth auth = authRepository.findByEmailOrUsernameOrContact(request.emailOrContact())
+                .orElseThrow(() -> UserNotFoundException.byEmailOrContact(request.emailOrContact()));
+
+        // Verificar senha
+        if (!passwordEncoder.matches(request.password(), auth.getPassword())) {
+            throw InvalidCredentialsException.create();
+        }
+
+        // Gerar tokens
+        String accessToken = jwtService.generateTokenForAuth(auth);
+        String refreshToken = jwtService.generateRefreshTokenForAuth(auth);
+        
+        return new LoginResponse(accessToken, refreshToken);
+    }
+
+    @Override
+    public Optional<Auth> findByEmailOrUsernameOrContact(String emailOrContact) {
+        return authRepository.findByEmailOrUsernameOrContact(emailOrContact);
     }
 } 

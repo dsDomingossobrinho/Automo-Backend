@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import jakarta.annotation.PostConstruct;
 
 import java.security.Key;
 import java.util.Date;
@@ -36,6 +37,12 @@ public class JwtService {
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
 
+    @PostConstruct
+    public void init() {
+        // Método para inicialização pós-construção se necessário
+        // Usado principalmente em testes para configurar os valores via ReflectionTestUtils
+    }
+
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -53,13 +60,13 @@ public class JwtService {
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
 
-    public String generateToken(Auth auth) {
+    public String generateTokenForAuth(Auth auth) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", auth.getId());
         claims.put("contact", auth.getContact());
         claims.put("email", auth.getEmail());
         
-        // Buscar roles através de AuthRoles
+        // Buscar roles através de AuthRoles  
         List<AuthRoles> authRoles = authRolesRepository.findByAuthId(auth.getId());
         List<Long> roleIds = authRoles.stream()
                 .map(authRole -> authRole.getRole().getId())
@@ -73,10 +80,10 @@ public class JwtService {
         
         claims.put("account_type_id", auth.getAccountType().getId());
         claims.put("username", auth.getUsername());
-        return generateToken(claims, auth, jwtExpiration);
+        return generateTokenWithClaims(claims, auth, jwtExpiration);
     }
 
-    public String generateToken(Map<String, Object> extraClaims, Auth auth, long expiration) {
+    public String generateTokenWithClaims(Map<String, Object> extraClaims, Auth auth, long expiration) {
         return Jwts
                 .builder()
                 .claims(extraClaims)
@@ -89,6 +96,14 @@ public class JwtService {
 
     public String generateRefreshToken(UserDetails userDetails) {
         return buildToken(new HashMap<>(), userDetails, refreshExpiration);
+    }
+
+    public String generateRefreshTokenForAuth(Auth auth) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", auth.getId());
+        claims.put("email", auth.getEmail());
+        claims.put("username", auth.getUsername());
+        return generateTokenWithClaims(claims, auth, refreshExpiration);
     }
 
     private String buildToken(
@@ -111,7 +126,12 @@ public class JwtService {
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenValid(String token, String username) {
+        final String tokenUsername = extractUsername(token);
+        return (tokenUsername.equals(username)) && !isTokenExpired(token);
+    }
+
+    public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 

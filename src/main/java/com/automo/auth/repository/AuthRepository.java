@@ -21,6 +21,9 @@ public interface AuthRepository extends JpaRepository<Auth, Long> {
     @Query("SELECT a FROM Auth a WHERE a.email = :emailOrContact OR a.contact = :emailOrContact")
     Optional<Auth> findByEmailOrContact(@Param("emailOrContact") String emailOrContact);
     
+    @Query("SELECT a FROM Auth a WHERE a.email = :emailOrContact OR a.username = :emailOrContact OR a.contact = :emailOrContact")
+    Optional<Auth> findByEmailOrUsernameOrContact(@Param("emailOrContact") String emailOrContact);
+    
     boolean existsByEmail(String email);
     
     boolean existsByUsername(String username);

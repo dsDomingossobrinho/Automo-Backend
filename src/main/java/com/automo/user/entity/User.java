@@ -16,7 +16,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_user_email", columnList = "email"),
+    @Index(name = "idx_user_name", columnList = "name"),
+    @Index(name = "idx_user_contacto", columnList = "contacto"),
+    @Index(name = "idx_user_auth", columnList = "auth_id"),
+    @Index(name = "idx_user_country", columnList = "country_id"),
+    @Index(name = "idx_user_organization_type", columnList = "organization_type_id"),
+    @Index(name = "idx_user_province", columnList = "province_id"),
+    @Index(name = "idx_user_state", columnList = "state_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
