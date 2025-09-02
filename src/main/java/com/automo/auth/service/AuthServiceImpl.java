@@ -9,16 +9,12 @@ import com.automo.auth.dto.LoginResponse;
 import com.automo.auth.entity.Auth;
 import com.automo.auth.repository.AuthRepository;
 import com.automo.auth.util.ContactValidator;
-import com.automo.authRoles.service.AuthRolesService;
 import com.automo.config.security.JwtService;
 import com.automo.exception.UserAlreadyExistsException;
 import com.automo.exception.UserNotFoundException;
 import com.automo.exception.InvalidCredentialsException;
-import com.automo.role.entity.Role;
-import com.automo.role.service.RoleService;
 import com.automo.state.entity.State;
 import com.automo.state.service.StateService;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,26 +26,20 @@ import java.util.Optional;
 public class AuthServiceImpl implements AuthService {
 
     private final AuthRepository authRepository;
-    private final RoleService roleService;
     private final StateService stateService;
-    private final AuthRolesService authRolesService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final OtpService otpService;
 
     public AuthServiceImpl(AuthRepository authRepository,
-                           RoleService roleService,
                            StateService stateService,
-                           @Lazy AuthRolesService authRolesService,
                            PasswordEncoder passwordEncoder,
                            JwtService jwtService,
                            AuthenticationManager authenticationManager,
                            OtpService otpService) {
         this.authRepository = authRepository;
-        this.roleService = roleService;
         this.stateService = stateService;
-        this.authRolesService = authRolesService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
@@ -66,8 +56,6 @@ public class AuthServiceImpl implements AuthService {
             throw UserAlreadyExistsException.withContact(request.contact());
         }
 
-        // Get default role and state
-        Role role = roleService.getRoleByRole("USER");
         State state = stateService.getStateByState("ACTIVE");
 
         // Create new auth user
@@ -79,9 +67,6 @@ public class AuthServiceImpl implements AuthService {
         auth.setState(state);
 
         authRepository.save(auth);
-        
-        // Criar associação AuthRoles com a role padrão
-        authRolesService.createAuthRolesWithEntities(auth, role, state);
 
         // Generate token
         String token = jwtService.generateTokenForAuth(auth);
@@ -265,5 +250,36 @@ public class AuthServiceImpl implements AuthService {
         }
         
         return entity;
+    }
+    
+    @Override
+    public String generateUniqueUsername(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be null or empty");
+        }
+        
+        // Limpar e normalizar o nome
+        String cleanName = name.toLowerCase()
+                .replaceAll("[^a-zA-Z0-9\\s]", "") // Remove caracteres especiais
+                .replaceAll("\\s+", ".") // Substitui espaços por pontos
+                .trim();
+        
+        // Se o nome ficou vazio após limpeza, usar um padrão
+        if (cleanName.isEmpty()) {
+            cleanName = "user";
+        }
+        
+        // Verificar se username já existe
+        String baseUsername = cleanName;
+        String finalUsername = baseUsername;
+        int counter = 1;
+        
+        // Procurar até encontrar um username único
+        while (authRepository.existsByUsername(finalUsername)) {
+            finalUsername = baseUsername + "." + counter;
+            counter++;
+        }
+        
+        return finalUsername;
     }
 } 

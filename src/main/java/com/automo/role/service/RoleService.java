@@ -52,4 +52,9 @@ public interface RoleService {
      * Busca Role por ID e estado específico (state_id = 1 por padrão)
      */
     Role findByIdAndStateId(Long id, Long stateId);
+    
+    /**
+     * Busca Role por nome do role - método para comunicação entre services
+     */
+    Role findByRole(String role);
 } 

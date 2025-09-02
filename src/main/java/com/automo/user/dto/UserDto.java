@@ -16,8 +16,12 @@ public record UserDto(
     
     String contacto,
     
-    @NotNull(message = "ID da autenticação é obrigatório")
-    Long authId,
+    // Campos para criação do Auth (username será gerado automaticamente baseado no name)
+    @NotBlank(message = "Password é obrigatório")
+    String password,
+    
+    @NotNull(message = "ID do tipo de conta é obrigatório")
+    Long accountTypeId,
     
     @NotNull(message = "ID do país é obrigatório")
     Long countryId,

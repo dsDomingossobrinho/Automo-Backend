@@ -95,4 +95,10 @@ public class RoleServiceImpl implements RoleService {
         // For entities without state relationship, return the entity regardless of stateId
         return entity;
     }
+    
+    @Override
+    public Role findByRole(String role) {
+        return roleRepository.findByRole(role)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Role with name '" + role + "' not found"));
+    }
 } 

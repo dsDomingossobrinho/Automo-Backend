@@ -66,4 +66,9 @@ public interface AuthService {
      * Busca Auth por ID e estado específico (state_id = 1 por padrão)
      */
     Auth findByIdAndStateId(Long id, Long stateId);
+    
+    /**
+     * Gera um username único e válido baseado no nome fornecido
+     */
+    String generateUniqueUsername(String name);
 } 
