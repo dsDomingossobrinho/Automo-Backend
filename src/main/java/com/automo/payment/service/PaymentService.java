@@ -25,4 +25,14 @@ public interface PaymentService {
     List<PaymentResponse> getPaymentsByIdentifier(String identifier);
 
     void deletePayment(Long id);
+    
+    /**
+     * Busca Payment por ID - método obrigatório para comunicação entre services
+     */
+    Payment findById(Long id);
+    
+    /**
+     * Busca Payment por ID e estado específico (state_id = 1 por padrão)
+     */
+    Payment findByIdAndStateId(Long id, Long stateId);
 } 

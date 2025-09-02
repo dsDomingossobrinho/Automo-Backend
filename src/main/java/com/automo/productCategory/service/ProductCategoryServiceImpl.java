@@ -5,7 +5,7 @@ import com.automo.productCategory.entity.ProductCategory;
 import com.automo.productCategory.repository.ProductCategoryRepository;
 import com.automo.productCategory.response.ProductCategoryResponse;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,12 +17,11 @@ import java.util.List;
 public class ProductCategoryServiceImpl implements ProductCategoryService {
 
     private final ProductCategoryRepository productCategoryRepository;
-    private final StateRepository stateRepository;
+    private final StateService stateService;
 
     @Override
     public ProductCategoryResponse createProductCategory(ProductCategoryDto productCategoryDto) {
-        State state = stateRepository.findById(productCategoryDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + productCategoryDto.stateId() + " not found"));
+        State state = stateService.findById(productCategoryDto.stateId());
 
         ProductCategory productCategory = new ProductCategory();
         productCategory.setCategory(productCategoryDto.category());
@@ -38,8 +37,7 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
         ProductCategory productCategory = productCategoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("ProductCategory with ID " + id + " not found"));
 
-        State state = stateRepository.findById(productCategoryDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + productCategoryDto.stateId() + " not found"));
+        State state = stateService.findById(productCategoryDto.stateId());
 
         productCategory.setCategory(productCategoryDto.category());
         productCategory.setDescription(productCategoryDto.description());
@@ -91,5 +89,28 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
                 productCategory.getCreatedAt(),
                 productCategory.getUpdatedAt()
         );
+    }
+
+    @Override
+    public ProductCategory findById(Long id) {
+        return productCategoryRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("ProductCategory with ID " + id + " not found"));
+    }
+
+    @Override
+    public ProductCategory findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        ProductCategory entity = productCategoryRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("ProductCategory with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("ProductCategory with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

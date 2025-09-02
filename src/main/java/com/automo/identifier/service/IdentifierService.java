@@ -28,4 +28,14 @@ public interface IdentifierService {
 
     // Novo método para criar identifier automaticamente
     void createIdentifierForEntity(Long userId, String entityType, Long stateId);
+    
+    /**
+     * Busca Identifier por ID - método obrigatório para comunicação entre services
+     */
+    Identifier findById(Long id);
+    
+    /**
+     * Busca Identifier por ID e estado específico (state_id = 1 por padrão)
+     */
+    Identifier findByIdAndStateId(Long id, Long stateId);
 } 

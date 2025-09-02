@@ -19,4 +19,14 @@ public interface OrganizationTypeService {
     OrganizationTypeResponse getOrganizationTypeByIdResponse(Long id);
 
     void deleteOrganizationType(Long id);
+    
+    /**
+     * Busca OrganizationType por ID - método obrigatório para comunicação entre services
+     */
+    OrganizationType findById(Long id);
+    
+    /**
+     * Busca OrganizationType por ID e estado específico (state_id = 1 por padrão)
+     */
+    OrganizationType findByIdAndStateId(Long id, Long stateId);
 } 

@@ -21,4 +21,14 @@ public interface SubscriptionPlanService {
     List<SubscriptionPlanResponse> getSubscriptionPlansByState(Long stateId);
 
     void deleteSubscriptionPlan(Long id);
+    
+    /**
+     * Busca SubscriptionPlan por ID - método obrigatório para comunicação entre services
+     */
+    SubscriptionPlan findById(Long id);
+    
+    /**
+     * Busca SubscriptionPlan por ID e estado específico (state_id = 1 por padrão)
+     */
+    SubscriptionPlan findByIdAndStateId(Long id, Long stateId);
 } 

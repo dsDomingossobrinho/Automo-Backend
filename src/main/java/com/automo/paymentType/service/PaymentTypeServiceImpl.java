@@ -74,4 +74,19 @@ public class PaymentTypeServiceImpl implements PaymentTypeService {
                 paymentType.getUpdatedAt()
         );
     }
+
+    @Override
+    public PaymentType findById(Long id) {
+        return paymentTypeRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("PaymentType with ID " + id + " not found"));
+    }
+
+    @Override
+    public PaymentType findByIdAndStateId(Long id, Long stateId) {
+        PaymentType entity = paymentTypeRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("PaymentType with ID " + id + " not found"));
+        
+        // For entities without state relationship, return the entity regardless of stateId
+        return entity;
+    }
 } 

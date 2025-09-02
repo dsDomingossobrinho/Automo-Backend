@@ -5,7 +5,7 @@ import com.automo.country.entity.Country;
 import com.automo.country.repository.CountryRepository;
 import com.automo.country.response.CountryResponse;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,12 +17,11 @@ import java.util.List;
 public class CountryServiceImpl implements CountryService {
 
     private final CountryRepository countryRepository;
-    private final StateRepository stateRepository;
+    private final StateService stateService;
 
     @Override
     public CountryResponse createCountry(CountryDto countryDto) {
-        State state = stateRepository.findById(countryDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + countryDto.stateId() + " not found"));
+        State state = stateService.findById(countryDto.stateId());
 
         Country country = new Country();
         country.setCountry(countryDto.country());
@@ -39,8 +38,7 @@ public class CountryServiceImpl implements CountryService {
         Country country = countryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Country with ID " + id + " not found"));
 
-        State state = stateRepository.findById(countryDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + countryDto.stateId() + " not found"));
+        State state = stateService.findById(countryDto.stateId());
 
         country.setCountry(countryDto.country());
         country.setNumberDigits(countryDto.numberDigits());
@@ -94,5 +92,28 @@ public class CountryServiceImpl implements CountryService {
                 country.getCreatedAt(),
                 country.getUpdatedAt()
         );
+    }
+
+    @Override
+    public Country findById(Long id) {
+        return countryRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Country with ID " + id + " not found"));
+    }
+
+    @Override
+    public Country findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        Country entity = countryRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Country with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("Country with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

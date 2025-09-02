@@ -56,4 +56,14 @@ public interface AuthService {
      * Busca usuário por email, username ou contato
      */
     Optional<Auth> findByEmailOrUsernameOrContact(String emailOrContact);
+    
+    /**
+     * Busca Auth por ID - método obrigatório para comunicação entre services
+     */
+    Auth findById(Long id);
+    
+    /**
+     * Busca Auth por ID e estado específico (state_id = 1 por padrão)
+     */
+    Auth findByIdAndStateId(Long id, Long stateId);
 } 

@@ -74,4 +74,19 @@ public class OrganizationTypeServiceImpl implements OrganizationTypeService {
                 organizationType.getUpdatedAt()
         );
     }
+
+    @Override
+    public OrganizationType findById(Long id) {
+        return organizationTypeRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("OrganizationType with ID " + id + " not found"));
+    }
+
+    @Override
+    public OrganizationType findByIdAndStateId(Long id, Long stateId) {
+        OrganizationType entity = organizationTypeRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("OrganizationType with ID " + id + " not found"));
+        
+        // For entities without state relationship, return the entity regardless of stateId
+        return entity;
+    }
 } 

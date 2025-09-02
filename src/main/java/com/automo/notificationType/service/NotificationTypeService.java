@@ -19,4 +19,14 @@ public interface NotificationTypeService {
     NotificationTypeResponse getNotificationTypeByIdResponse(Long id);
 
     void deleteNotificationType(Long id);
+    
+    /**
+     * Busca NotificationType por ID - método obrigatório para comunicação entre services
+     */
+    NotificationType findById(Long id);
+    
+    /**
+     * Busca NotificationType por ID e estado específico (state_id = 1 por padrão)
+     */
+    NotificationType findByIdAndStateId(Long id, Long stateId);
 } 

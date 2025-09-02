@@ -25,4 +25,14 @@ public interface AssociatedEmailService {
     AssociatedEmailResponse getAssociatedEmailByEmail(String email);
 
     void deleteAssociatedEmail(Long id);
+    
+    /**
+     * Busca AssociatedEmail por ID - método obrigatório para comunicação entre services
+     */
+    AssociatedEmail findById(Long id);
+    
+    /**
+     * Busca AssociatedEmail por ID e estado específico (state_id = 1 por padrão)
+     */
+    AssociatedEmail findByIdAndStateId(Long id, Long stateId);
 } 

@@ -5,9 +5,9 @@ import com.automo.lead.entity.Lead;
 import com.automo.lead.repository.LeadRepository;
 import com.automo.lead.response.LeadResponse;
 import com.automo.leadType.entity.LeadType;
-import com.automo.leadType.repository.LeadTypeRepository;
+import com.automo.leadType.service.LeadTypeService;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,16 +20,14 @@ import java.util.stream.Collectors;
 public class LeadServiceImpl implements LeadService {
 
     private final LeadRepository leadRepository;
-    private final LeadTypeRepository leadTypeRepository;
-    private final StateRepository stateRepository;
+    private final LeadTypeService leadTypeService;
+    private final StateService stateService;
 
     @Override
     public LeadResponse createLead(LeadDto leadDto) {
-        LeadType leadType = leadTypeRepository.findById(leadDto.leadTypeId())
-                .orElseThrow(() -> new EntityNotFoundException("LeadType with ID " + leadDto.leadTypeId() + " not found"));
+        LeadType leadType = leadTypeService.findById(leadDto.leadTypeId());
 
-        State state = stateRepository.findById(leadDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + leadDto.stateId() + " not found"));
+        State state = stateService.findById(leadDto.stateId());
 
         Lead lead = new Lead();
         lead.setName(leadDto.name());
@@ -47,11 +45,9 @@ public class LeadServiceImpl implements LeadService {
     public LeadResponse updateLead(Long id, LeadDto leadDto) {
         Lead lead = this.getLeadById(id);
         
-        LeadType leadType = leadTypeRepository.findById(leadDto.leadTypeId())
-                .orElseThrow(() -> new EntityNotFoundException("LeadType with ID " + leadDto.leadTypeId() + " not found"));
+        LeadType leadType = leadTypeService.findById(leadDto.leadTypeId());
 
-        State state = stateRepository.findById(leadDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + leadDto.stateId() + " not found"));
+        State state = stateService.findById(leadDto.stateId());
 
         lead.setName(leadDto.name());
         lead.setEmail(leadDto.email());
@@ -127,5 +123,28 @@ public class LeadServiceImpl implements LeadService {
                 lead.getCreatedAt(),
                 lead.getUpdatedAt()
         );
+    }
+
+    @Override
+    public Lead findById(Long id) {
+        return leadRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Lead with ID " + id + " not found"));
+    }
+
+    @Override
+    public Lead findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        Lead entity = leadRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Lead with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("Lead with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

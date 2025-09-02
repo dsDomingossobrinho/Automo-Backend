@@ -74,4 +74,19 @@ public class NotificationTypeServiceImpl implements NotificationTypeService {
                 notificationType.getUpdatedAt()
         );
     }
+
+    @Override
+    public NotificationType findById(Long id) {
+        return notificationTypeRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("NotificationType with ID " + id + " not found"));
+    }
+
+    @Override
+    public NotificationType findByIdAndStateId(Long id, Long stateId) {
+        NotificationType entity = notificationTypeRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("NotificationType with ID " + id + " not found"));
+        
+        // For entities without state relationship, return the entity regardless of stateId
+        return entity;
+    }
 } 

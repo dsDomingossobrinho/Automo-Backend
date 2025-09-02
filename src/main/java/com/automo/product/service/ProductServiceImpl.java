@@ -5,7 +5,7 @@ import com.automo.product.entity.Product;
 import com.automo.product.repository.ProductRepository;
 import com.automo.product.response.ProductResponse;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,12 +18,11 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
-    private final StateRepository stateRepository;
+    private final StateService stateService;
 
     @Override
     public ProductResponse createProduct(ProductDto productDto) {
-        State state = stateRepository.findById(productDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + productDto.stateId() + " not found"));
+        State state = stateService.findById(productDto.stateId());
 
         Product product = new Product();
         product.setName(productDto.name());
@@ -40,8 +39,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse updateProduct(Long id, ProductDto productDto) {
         Product product = this.getProductById(id);
         
-        State state = stateRepository.findById(productDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + productDto.stateId() + " not found"));
+        State state = stateService.findById(productDto.stateId());
 
         product.setName(productDto.name());
         product.setImg(productDto.img());
@@ -99,5 +97,28 @@ public class ProductServiceImpl implements ProductService {
                 product.getCreatedAt(),
                 product.getUpdatedAt()
         );
+    }
+
+    @Override
+    public Product findById(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Product with ID " + id + " not found"));
+    }
+
+    @Override
+    public Product findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        Product entity = productRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Product with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("Product with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

@@ -101,4 +101,27 @@ public class UserServiceImpl implements UserService {
                 user.getUpdatedAt()
         );
     }
+
+    @Override
+    public User findById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("User with ID " + id + " not found"));
+    }
+
+    @Override
+    public User findByIdAndStateId(Long id, Long stateId) {
+        User entity = userRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("User with ID " + id + " not found"));
+        
+        // User has state relationship, check if entity's state matches required state
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("User with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
+    }
 } 

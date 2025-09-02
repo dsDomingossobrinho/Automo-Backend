@@ -1,13 +1,13 @@
 package com.automo.agentProduct.service;
 
 import com.automo.agent.entity.Agent;
-import com.automo.agent.repository.AgentRepository;
+import com.automo.agent.service.AgentService;
 import com.automo.agentProduct.dto.AgentProductDto;
 import com.automo.agentProduct.entity.AgentProduct;
 import com.automo.agentProduct.repository.AgentProductRepository;
 import com.automo.agentProduct.response.AgentProductResponse;
 import com.automo.product.entity.Product;
-import com.automo.product.repository.ProductRepository;
+import com.automo.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,16 +21,14 @@ import java.util.stream.Collectors;
 public class AgentProductServiceImpl implements AgentProductService {
 
     private final AgentProductRepository agentProductRepository;
-    private final AgentRepository agentRepository;
-    private final ProductRepository productRepository;
+    private final AgentService agentService;
+    private final ProductService productService;
 
     @Override
     public AgentProductResponse createAgentProduct(AgentProductDto agentProductDto) {
-        Agent agent = agentRepository.findById(agentProductDto.agentId())
-                .orElseThrow(() -> new RuntimeException("Agent not found"));
+        Agent agent = agentService.findById(agentProductDto.agentId());
         
-        Product product = productRepository.findById(agentProductDto.productId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+        Product product = productService.findById(agentProductDto.productId());
 
         AgentProduct agentProduct = new AgentProduct();
         agentProduct.setAgent(agent);
@@ -45,11 +43,9 @@ public class AgentProductServiceImpl implements AgentProductService {
         AgentProduct existingAgentProduct = agentProductRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("AgentProduct not found"));
 
-        Agent agent = agentRepository.findById(agentProductDto.agentId())
-                .orElseThrow(() -> new RuntimeException("Agent not found"));
+        Agent agent = agentService.findById(agentProductDto.agentId());
         
-        Product product = productRepository.findById(agentProductDto.productId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+        Product product = productService.findById(agentProductDto.productId());
 
         existingAgentProduct.setAgent(agent);
         existingAgentProduct.setProduct(product);
@@ -123,5 +119,20 @@ public class AgentProductServiceImpl implements AgentProductService {
                 agentProduct.getCreatedAt(),
                 agentProduct.getUpdatedAt()
         );
+    }
+
+    @Override
+    public AgentProduct findById(Long id) {
+        return agentProductRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("AgentProduct with ID " + id + " not found"));
+    }
+
+    @Override
+    public AgentProduct findByIdAndStateId(Long id, Long stateId) {
+        AgentProduct entity = agentProductRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("AgentProduct with ID " + id + " not found"));
+        
+        // For entities without state relationship, return the entity regardless of stateId
+        return entity;
     }
 } 

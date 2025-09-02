@@ -25,4 +25,14 @@ public interface AgentProductService {
     AgentProductResponse getAgentProductByAgentAndProduct(Long agentId, Long productId);
 
     void deleteAgentProduct(Long id);
+    
+    /**
+     * Busca AgentProduct por ID - método obrigatório para comunicação entre services
+     */
+    AgentProduct findById(Long id);
+    
+    /**
+     * Busca AgentProduct por ID e estado específico (state_id = 1 por padrão)
+     */
+    AgentProduct findByIdAndStateId(Long id, Long stateId);
 } 

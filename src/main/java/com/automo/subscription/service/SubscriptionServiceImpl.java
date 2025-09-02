@@ -5,13 +5,13 @@ import com.automo.subscription.entity.Subscription;
 import com.automo.subscription.repository.SubscriptionRepository;
 import com.automo.subscription.response.SubscriptionResponse;
 import com.automo.subscriptionPlan.entity.SubscriptionPlan;
-import com.automo.subscriptionPlan.repository.SubscriptionPlanRepository;
+import com.automo.subscriptionPlan.service.SubscriptionPlanService;
 import com.automo.promotion.entity.Promotion;
-import com.automo.promotion.repository.PromotionRepository;
+import com.automo.promotion.service.PromotionService;
 import com.automo.user.entity.User;
-import com.automo.user.repository.UserRepository;
+import com.automo.user.service.UserService;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,27 +27,31 @@ import java.util.stream.Collectors;
 public class SubscriptionServiceImpl implements SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
-    private final UserRepository userRepository;
-    private final SubscriptionPlanRepository planRepository;
-    private final PromotionRepository promotionRepository;
-    private final StateRepository stateRepository;
+    private final UserService userService;
+    private final SubscriptionPlanService planService;
+    private final PromotionService promotionService;
+    private final StateService stateService;
 
     @Override
     @Transactional
     public SubscriptionResponse createSubscription(SubscriptionDto subscriptionDto) {
-        User user = userRepository.findById(subscriptionDto.userId())
-                .orElseThrow(() -> new EntityNotFoundException("User with ID " + subscriptionDto.userId() + " not found"));
+        User user = userService.findById(subscriptionDto.userId());
 
-        SubscriptionPlan plan = planRepository.findById(subscriptionDto.planId())
-                .orElseThrow(() -> new EntityNotFoundException("SubscriptionPlan with ID " + subscriptionDto.planId() + " not found"));
+        SubscriptionPlan plan = planService.findById(subscriptionDto.planId());
 
-        State state = stateRepository.findById(subscriptionDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + subscriptionDto.stateId() + " not found"));
+        State state = stateService.findById(subscriptionDto.stateId());
 
         // Verificar se existe subscrição ativa para o usuário
+        Long activeStateId;
+        try {
+            State activeState = stateService.getStateByState("ACTIVE");
+            activeStateId = activeState.getId();
+        } catch (EntityNotFoundException e) {
+            activeStateId = 1L; // Default active state
+        }
         List<Subscription> activeSubscriptions = subscriptionRepository.findByUserIdAndStateId(
                 subscriptionDto.userId(), 
-                stateRepository.findByState("ACTIVE").map(State::getId).orElse(1L)
+                activeStateId
         );
 
         // Se existir subscrição ativa, calcular dias restantes e estender a nova
@@ -62,8 +66,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
             
             // Desativar subscrição anterior
-            State inactiveState = stateRepository.findByState("INACTIVE")
-                    .orElseThrow(() -> new EntityNotFoundException("INACTIVE state not found"));
+            State inactiveState = stateService.getStateByState("INACTIVE");
             activeSubscription.setState(inactiveState);
             subscriptionRepository.save(activeSubscription);
             
@@ -81,8 +84,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscription.setState(state);
             
             if (subscriptionDto.promotionId() != null) {
-                Promotion promotion = promotionRepository.findById(subscriptionDto.promotionId())
-                        .orElseThrow(() -> new EntityNotFoundException("Promotion with ID " + subscriptionDto.promotionId() + " not found"));
+                Promotion promotion = promotionService.findById(subscriptionDto.promotionId());
                 subscription.setPromotion(promotion);
             }
             
@@ -100,8 +102,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscription.setState(state);
             
             if (subscriptionDto.promotionId() != null) {
-                Promotion promotion = promotionRepository.findById(subscriptionDto.promotionId())
-                        .orElseThrow(() -> new EntityNotFoundException("Promotion with ID " + subscriptionDto.promotionId() + " not found"));
+                Promotion promotion = promotionService.findById(subscriptionDto.promotionId());
                 subscription.setPromotion(promotion);
             }
             
@@ -114,14 +115,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public SubscriptionResponse updateSubscription(Long id, SubscriptionDto subscriptionDto) {
         Subscription subscription = this.getSubscriptionById(id);
         
-        User user = userRepository.findById(subscriptionDto.userId())
-                .orElseThrow(() -> new EntityNotFoundException("User with ID " + subscriptionDto.userId() + " not found"));
+        User user = userService.findById(subscriptionDto.userId());
 
-        SubscriptionPlan plan = planRepository.findById(subscriptionDto.planId())
-                .orElseThrow(() -> new EntityNotFoundException("SubscriptionPlan with ID " + subscriptionDto.planId() + " not found"));
+        SubscriptionPlan plan = planService.findById(subscriptionDto.planId());
 
-        State state = stateRepository.findById(subscriptionDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + subscriptionDto.stateId() + " not found"));
+        State state = stateService.findById(subscriptionDto.stateId());
 
         subscription.setUser(user);
         subscription.setPlan(plan);
@@ -132,8 +130,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscription.setState(state);
         
         if (subscriptionDto.promotionId() != null) {
-            Promotion promotion = promotionRepository.findById(subscriptionDto.promotionId())
-                    .orElseThrow(() -> new EntityNotFoundException("Promotion with ID " + subscriptionDto.promotionId() + " not found"));
+            Promotion promotion = promotionService.findById(subscriptionDto.promotionId());
             subscription.setPromotion(promotion);
         } else {
             subscription.setPromotion(null);
@@ -214,8 +211,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     private SubscriptionResponse mapToResponse(Subscription subscription) {
         // Buscar o usuário para obter o nome
-        User user = userRepository.findById(subscription.getUser().getId())
-                .orElse(null);
+        User user = null;
+        try {
+            user = userService.findById(subscription.getUser().getId());
+        } catch (Exception e) {
+            // User not found, keep null
+        }
         
         return new SubscriptionResponse(
                 subscription.getId(),
@@ -234,5 +235,28 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 subscription.getCreatedAt(),
                 subscription.getUpdatedAt()
         );
+    }
+
+    @Override
+    public Subscription findById(Long id) {
+        return subscriptionRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Subscription with ID " + id + " not found"));
+    }
+
+    @Override
+    public Subscription findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        Subscription entity = subscriptionRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Subscription with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("Subscription with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

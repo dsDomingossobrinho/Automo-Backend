@@ -25,4 +25,14 @@ public interface NotificationService {
     List<NotificationResponse> getNotificationsByReceiver(Long receiverId);
 
     void deleteNotification(Long id);
+    
+    /**
+     * Busca Notification por ID - método obrigatório para comunicação entre services
+     */
+    Notification findById(Long id);
+    
+    /**
+     * Busca Notification por ID e estado específico (state_id = 1 por padrão)
+     */
+    Notification findByIdAndStateId(Long id, Long stateId);
 } 

@@ -19,4 +19,14 @@ public interface LeadTypeService {
     LeadTypeResponse getLeadTypeByIdResponse(Long id);
 
     void deleteLeadType(Long id);
+    
+    /**
+     * Busca LeadType por ID - método obrigatório para comunicação entre services
+     */
+    LeadType findById(Long id);
+    
+    /**
+     * Busca LeadType por ID e estado específico (state_id = 1 por padrão)
+     */
+    LeadType findByIdAndStateId(Long id, Long stateId);
 } 

@@ -27,4 +27,14 @@ public interface DealService {
     List<DealResponse> getDealsByPromotion(Long promotionId);
 
     void deleteDeal(Long id);
+    
+    /**
+     * Busca Deal por ID - método obrigatório para comunicação entre services
+     */
+    Deal findById(Long id);
+    
+    /**
+     * Busca Deal por ID e estado específico (state_id = 1 por padrão)
+     */
+    Deal findByIdAndStateId(Long id, Long stateId);
 } 

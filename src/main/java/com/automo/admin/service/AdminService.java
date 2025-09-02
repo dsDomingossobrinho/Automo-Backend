@@ -3,10 +3,11 @@ package com.automo.admin.service;
 import com.automo.admin.dto.AdminDto;
 import com.automo.admin.entity.Admin;
 import com.automo.admin.response.AdminResponse;
+import com.automo.model.service.BaseService;
 
 import java.util.List;
 
-public interface AdminService {
+public interface AdminService extends BaseService<Admin, AdminResponse, Long> {
 
     /**
      * Cria um novo admin

@@ -5,11 +5,11 @@ import com.automo.deal.entity.Deal;
 import com.automo.deal.repository.DealRepository;
 import com.automo.deal.response.DealResponse;
 import com.automo.lead.entity.Lead;
-import com.automo.lead.repository.LeadRepository;
+import com.automo.lead.service.LeadService;
 import com.automo.promotion.entity.Promotion;
-import com.automo.promotion.repository.PromotionRepository;
+import com.automo.promotion.service.PromotionService;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,14 +22,13 @@ import java.util.stream.Collectors;
 public class DealServiceImpl implements DealService {
 
     private final DealRepository dealRepository;
-    private final LeadRepository leadRepository;
-    private final PromotionRepository promotionRepository;
-    private final StateRepository stateRepository;
+    private final LeadService leadService;
+    private final PromotionService promotionService;
+    private final StateService stateService;
 
     @Override
     public DealResponse createDeal(DealDto dealDto) {
-        State state = stateRepository.findById(dealDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + dealDto.stateId() + " not found"));
+        State state = stateService.findById(dealDto.stateId());
 
         Deal deal = new Deal();
         deal.setTotal(dealDto.total());
@@ -38,14 +37,12 @@ public class DealServiceImpl implements DealService {
         deal.setState(state);
         
         if (dealDto.leadId() != null) {
-            Lead lead = leadRepository.findById(dealDto.leadId())
-                    .orElseThrow(() -> new EntityNotFoundException("Lead with ID " + dealDto.leadId() + " not found"));
+            Lead lead = leadService.findById(dealDto.leadId());
             deal.setLead(lead);
         }
         
         if (dealDto.promotionId() != null) {
-            Promotion promotion = promotionRepository.findById(dealDto.promotionId())
-                    .orElseThrow(() -> new EntityNotFoundException("Promotion with ID " + dealDto.promotionId() + " not found"));
+            Promotion promotion = promotionService.findById(dealDto.promotionId());
             deal.setPromotion(promotion);
         }
         
@@ -57,8 +54,7 @@ public class DealServiceImpl implements DealService {
     public DealResponse updateDeal(Long id, DealDto dealDto) {
         Deal deal = this.getDealById(id);
         
-        State state = stateRepository.findById(dealDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + dealDto.stateId() + " not found"));
+        State state = stateService.findById(dealDto.stateId());
 
         deal.setTotal(dealDto.total());
         deal.setDeliveryDate(dealDto.deliveryDate());
@@ -66,16 +62,14 @@ public class DealServiceImpl implements DealService {
         deal.setState(state);
         
         if (dealDto.leadId() != null) {
-            Lead lead = leadRepository.findById(dealDto.leadId())
-                    .orElseThrow(() -> new EntityNotFoundException("Lead with ID " + dealDto.leadId() + " not found"));
+            Lead lead = leadService.findById(dealDto.leadId());
             deal.setLead(lead);
         } else {
             deal.setLead(null);
         }
         
         if (dealDto.promotionId() != null) {
-            Promotion promotion = promotionRepository.findById(dealDto.promotionId())
-                    .orElseThrow(() -> new EntityNotFoundException("Promotion with ID " + dealDto.promotionId() + " not found"));
+            Promotion promotion = promotionService.findById(dealDto.promotionId());
             deal.setPromotion(promotion);
         } else {
             deal.setPromotion(null);
@@ -157,5 +151,28 @@ public class DealServiceImpl implements DealService {
                 deal.getCreatedAt(),
                 deal.getUpdatedAt()
         );
+    }
+
+    @Override
+    public Deal findById(Long id) {
+        return dealRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Deal with ID " + id + " not found"));
+    }
+
+    @Override
+    public Deal findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        Deal entity = dealRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Deal with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("Deal with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

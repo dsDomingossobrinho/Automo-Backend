@@ -5,7 +5,7 @@ import com.automo.subscriptionPlan.entity.SubscriptionPlan;
 import com.automo.subscriptionPlan.repository.SubscriptionPlanRepository;
 import com.automo.subscriptionPlan.response.SubscriptionPlanResponse;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,12 +18,11 @@ import java.util.stream.Collectors;
 public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
 
     private final SubscriptionPlanRepository subscriptionPlanRepository;
-    private final StateRepository stateRepository;
+    private final StateService stateService;
 
     @Override
     public SubscriptionPlanResponse createSubscriptionPlan(SubscriptionPlanDto subscriptionPlanDto) {
-        State state = stateRepository.findById(subscriptionPlanDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + subscriptionPlanDto.stateId() + " not found"));
+        State state = stateService.findById(subscriptionPlanDto.stateId());
 
         SubscriptionPlan subscriptionPlan = new SubscriptionPlan();
         subscriptionPlan.setName(subscriptionPlanDto.name());
@@ -39,8 +38,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
     public SubscriptionPlanResponse updateSubscriptionPlan(Long id, SubscriptionPlanDto subscriptionPlanDto) {
         SubscriptionPlan subscriptionPlan = this.getSubscriptionPlanById(id);
 
-        State state = stateRepository.findById(subscriptionPlanDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + subscriptionPlanDto.stateId() + " not found"));
+        State state = stateService.findById(subscriptionPlanDto.stateId());
 
         subscriptionPlan.setName(subscriptionPlanDto.name());
         subscriptionPlan.setPrice(subscriptionPlanDto.price());
@@ -96,5 +94,28 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
                 subscriptionPlan.getCreatedAt(),
                 subscriptionPlan.getUpdatedAt()
         );
+    }
+
+    @Override
+    public SubscriptionPlan findById(Long id) {
+        return subscriptionPlanRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("SubscriptionPlan with ID " + id + " not found"));
+    }
+
+    @Override
+    public SubscriptionPlan findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        SubscriptionPlan entity = subscriptionPlanRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("SubscriptionPlan with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("SubscriptionPlan with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

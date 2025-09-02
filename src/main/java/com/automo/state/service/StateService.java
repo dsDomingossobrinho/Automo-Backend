@@ -27,4 +27,14 @@ public interface StateService {
      * Deleta um estado
      */
     void deleteState(Long id);
+    
+    /**
+     * Busca State por ID - método obrigatório para comunicação entre services
+     */
+    State findById(Long id);
+    
+    /**
+     * Busca State por ID e estado específico (state_id = 1 por padrão)
+     */
+    State findByIdAndStateId(Long id, Long stateId);
 } 

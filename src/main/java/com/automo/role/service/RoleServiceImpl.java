@@ -80,4 +80,19 @@ public class RoleServiceImpl implements RoleService {
                 role.getUpdatedAt()
         );
     }
+
+    @Override
+    public Role findById(Long id) {
+        return roleRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Role with ID " + id + " not found"));
+    }
+
+    @Override
+    public Role findByIdAndStateId(Long id, Long stateId) {
+        Role entity = roleRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Role with ID " + id + " not found"));
+        
+        // For entities without state relationship, return the entity regardless of stateId
+        return entity;
+    }
 } 

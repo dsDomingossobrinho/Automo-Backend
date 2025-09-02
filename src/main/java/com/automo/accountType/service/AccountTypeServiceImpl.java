@@ -74,4 +74,19 @@ public class AccountTypeServiceImpl implements AccountTypeService {
                 accountType.getUpdatedAt()
         );
     }
+
+    @Override
+    public AccountType findById(Long id) {
+        return accountTypeRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("AccountType with ID " + id + " not found"));
+    }
+
+    @Override
+    public AccountType findByIdAndStateId(Long id, Long stateId) {
+        AccountType entity = accountTypeRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("AccountType with ID " + id + " not found"));
+        
+        // For entities without state relationship, return the entity regardless of stateId
+        return entity;
+    }
 } 

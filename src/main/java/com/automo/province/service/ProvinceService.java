@@ -23,4 +23,14 @@ public interface ProvinceService {
     List<ProvinceResponse> getProvincesByState(Long stateId);
 
     void deleteProvince(Long id);
+    
+    /**
+     * Busca Province por ID - método obrigatório para comunicação entre services
+     */
+    Province findById(Long id);
+    
+    /**
+     * Busca Province por ID e estado específico (state_id = 1 por padrão)
+     */
+    Province findByIdAndStateId(Long id, Long stateId);
 } 

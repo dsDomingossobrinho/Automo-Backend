@@ -5,7 +5,7 @@ import com.automo.promotion.entity.Promotion;
 import com.automo.promotion.repository.PromotionRepository;
 import com.automo.promotion.response.PromotionResponse;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,12 +18,11 @@ import java.util.stream.Collectors;
 public class PromotionServiceImpl implements PromotionService {
 
     private final PromotionRepository promotionRepository;
-    private final StateRepository stateRepository;
+    private final StateService stateService;
 
     @Override
     public PromotionResponse createPromotion(PromotionDto promotionDto) {
-        State state = stateRepository.findById(promotionDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + promotionDto.stateId() + " not found"));
+        State state = stateService.findById(promotionDto.stateId());
 
         Promotion promotion = new Promotion();
         promotion.setName(promotionDto.name());
@@ -39,8 +38,7 @@ public class PromotionServiceImpl implements PromotionService {
     public PromotionResponse updatePromotion(Long id, PromotionDto promotionDto) {
         Promotion promotion = this.getPromotionById(id);
         
-        State state = stateRepository.findById(promotionDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + promotionDto.stateId() + " not found"));
+        State state = stateService.findById(promotionDto.stateId());
 
         promotion.setName(promotionDto.name());
         promotion.setDiscountValue(promotionDto.discountValue());
@@ -103,5 +101,28 @@ public class PromotionServiceImpl implements PromotionService {
                 promotion.getCreatedAt(),
                 promotion.getUpdatedAt()
         );
+    }
+
+    @Override
+    public Promotion findById(Long id) {
+        return promotionRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Promotion with ID " + id + " not found"));
+    }
+
+    @Override
+    public Promotion findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        Promotion entity = promotionRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Promotion with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("Promotion with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

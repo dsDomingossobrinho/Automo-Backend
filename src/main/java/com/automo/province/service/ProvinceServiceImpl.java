@@ -5,9 +5,9 @@ import com.automo.province.entity.Province;
 import com.automo.province.repository.ProvinceRepository;
 import com.automo.province.response.ProvinceResponse;
 import com.automo.country.entity.Country;
-import com.automo.country.repository.CountryRepository;
+import com.automo.country.service.CountryService;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,16 +19,14 @@ import java.util.List;
 public class ProvinceServiceImpl implements ProvinceService {
 
     private final ProvinceRepository provinceRepository;
-    private final CountryRepository countryRepository;
-    private final StateRepository stateRepository;
+    private final CountryService countryService;
+    private final StateService stateService;
 
     @Override
     public ProvinceResponse createProvince(ProvinceDto provinceDto) {
-        Country country = countryRepository.findById(provinceDto.countryId())
-                .orElseThrow(() -> new EntityNotFoundException("Country with ID " + provinceDto.countryId() + " not found"));
+        Country country = countryService.findById(provinceDto.countryId());
 
-        State state = stateRepository.findById(provinceDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + provinceDto.stateId() + " not found"));
+        State state = stateService.findById(provinceDto.stateId());
 
         Province province = new Province();
         province.setProvince(provinceDto.province());
@@ -44,11 +42,9 @@ public class ProvinceServiceImpl implements ProvinceService {
         Province province = provinceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Province with ID " + id + " not found"));
 
-        Country country = countryRepository.findById(provinceDto.countryId())
-                .orElseThrow(() -> new EntityNotFoundException("Country with ID " + provinceDto.countryId() + " not found"));
+        Country country = countryService.findById(provinceDto.countryId());
 
-        State state = stateRepository.findById(provinceDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + provinceDto.stateId() + " not found"));
+        State state = stateService.findById(provinceDto.stateId());
 
         province.setProvince(provinceDto.province());
         province.setCountry(country);
@@ -106,5 +102,28 @@ public class ProvinceServiceImpl implements ProvinceService {
                 province.getCreatedAt(),
                 province.getUpdatedAt()
         );
+    }
+
+    @Override
+    public Province findById(Long id) {
+        return provinceRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Province with ID " + id + " not found"));
+    }
+
+    @Override
+    public Province findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        Province entity = provinceRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Province with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("Province with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

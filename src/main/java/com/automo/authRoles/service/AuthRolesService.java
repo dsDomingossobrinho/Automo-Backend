@@ -22,4 +22,19 @@ public interface AuthRolesService {
     List<AuthRolesResponse> getAuthRolesByRoleId(Long roleId);
     
     List<AuthRolesResponse> getAuthRolesByStateId(Long stateId);
+    
+    /**
+     * Busca AuthRoles por ID - método obrigatório para comunicação entre services
+     */
+    com.automo.authRoles.entity.AuthRoles findById(Long id);
+    
+    /**
+     * Busca AuthRoles por ID e estado específico (state_id = 1 por padrão)
+     */
+    com.automo.authRoles.entity.AuthRoles findByIdAndStateId(Long id, Long stateId);
+    
+    /**
+     * Cria um AuthRoles com entidades já resolvidas - usado pelo AuthService
+     */
+    void createAuthRolesWithEntities(com.automo.auth.entity.Auth auth, com.automo.role.entity.Role role, com.automo.state.entity.State state);
 } 

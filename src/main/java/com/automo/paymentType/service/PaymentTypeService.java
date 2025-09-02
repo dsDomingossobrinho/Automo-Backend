@@ -19,4 +19,14 @@ public interface PaymentTypeService {
     PaymentTypeResponse getPaymentTypeByIdResponse(Long id);
 
     void deletePaymentType(Long id);
+    
+    /**
+     * Busca PaymentType por ID - método obrigatório para comunicação entre services
+     */
+    PaymentType findById(Long id);
+    
+    /**
+     * Busca PaymentType por ID e estado específico (state_id = 1 por padrão)
+     */
+    PaymentType findByIdAndStateId(Long id, Long stateId);
 } 

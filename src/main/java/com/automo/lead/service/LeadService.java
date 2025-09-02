@@ -25,4 +25,14 @@ public interface LeadService {
     List<LeadResponse> getLeadsByIdentifier(Long identifierId);
 
     void deleteLead(Long id);
+    
+    /**
+     * Busca Lead por ID - método obrigatório para comunicação entre services
+     */
+    Lead findById(Long id);
+    
+    /**
+     * Busca Lead por ID e estado específico (state_id = 1 por padrão)
+     */
+    Lead findByIdAndStateId(Long id, Long stateId);
 } 

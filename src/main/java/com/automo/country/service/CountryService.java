@@ -21,4 +21,14 @@ public interface CountryService {
     List<CountryResponse> getCountriesByState(Long stateId);
 
     void deleteCountry(Long id);
+    
+    /**
+     * Busca Country por ID - método obrigatório para comunicação entre services
+     */
+    Country findById(Long id);
+    
+    /**
+     * Busca Country por ID e estado específico (state_id = 1 por padrão)
+     */
+    Country findByIdAndStateId(Long id, Long stateId);
 } 

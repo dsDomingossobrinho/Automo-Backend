@@ -25,4 +25,14 @@ public interface AgentAreasService {
     List<AgentAreasResponse> getAgentAreasByState(Long stateId);
     
     void deleteAgentAreas(Long id);
+    
+    /**
+     * Busca AgentAreas por ID - método obrigatório para comunicação entre services
+     */
+    AgentAreas findById(Long id);
+    
+    /**
+     * Busca AgentAreas por ID e estado específico (state_id = 1 por padrão)
+     */
+    AgentAreas findByIdAndStateId(Long id, Long stateId);
 } 

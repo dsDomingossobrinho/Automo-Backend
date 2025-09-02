@@ -32,4 +32,14 @@ public interface SubscriptionService {
     List<SubscriptionResponse> getExpiredSubscriptions(LocalDate date);
 
     void deleteSubscription(Long id);
+    
+    /**
+     * Busca Subscription por ID - método obrigatório para comunicação entre services
+     */
+    Subscription findById(Long id);
+    
+    /**
+     * Busca Subscription por ID e estado específico (state_id = 1 por padrão)
+     */
+    Subscription findByIdAndStateId(Long id, Long stateId);
 } 

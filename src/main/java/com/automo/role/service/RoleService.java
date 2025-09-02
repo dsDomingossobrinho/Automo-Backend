@@ -42,4 +42,14 @@ public interface RoleService {
      * Deleta um role
      */
     void deleteRole(Long id);
+    
+    /**
+     * Busca Role por ID - método obrigatório para comunicação entre services
+     */
+    Role findById(Long id);
+    
+    /**
+     * Busca Role por ID e estado específico (state_id = 1 por padrão)
+     */
+    Role findByIdAndStateId(Long id, Long stateId);
 } 

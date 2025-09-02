@@ -47,4 +47,14 @@ public interface UserService {
      * Deleta um usuário
      */
     void deleteUser(Long id);
+    
+    /**
+     * Busca User por ID - método obrigatório para comunicação entre services
+     */
+    User findById(Long id);
+    
+    /**
+     * Busca User por ID e estado específico (state_id = 1 por padrão)
+     */
+    User findByIdAndStateId(Long id, Long stateId);
 } 

@@ -5,11 +5,11 @@ import com.automo.notification.entity.Notification;
 import com.automo.notification.repository.NotificationRepository;
 import com.automo.notification.response.NotificationResponse;
 import com.automo.identifier.entity.Identifier;
-import com.automo.identifier.repository.IdentifierRepository;
+import com.automo.identifier.service.IdentifierService;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import com.automo.user.entity.User;
-import com.automo.user.repository.UserRepository;
+import com.automo.user.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,20 +24,17 @@ import java.util.stream.Collectors;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final IdentifierRepository identifierRepository;
-    private final StateRepository stateRepository;
-    private final UserRepository userRepository;
+    private final IdentifierService identifierService;
+    private final StateService stateService;
+    private final UserService userService;
 
     @Override
     public NotificationResponse createNotification(NotificationDto notificationDto) {
-        Identifier sender = identifierRepository.findById(notificationDto.senderId())
-                .orElseThrow(() -> new EntityNotFoundException("Sender identifier with ID " + notificationDto.senderId() + " not found"));
+        Identifier sender = identifierService.findById(notificationDto.senderId());
 
-        Identifier receiver = identifierRepository.findById(notificationDto.receiverId())
-                .orElseThrow(() -> new EntityNotFoundException("Receiver identifier with ID " + notificationDto.receiverId() + " not found"));
+        Identifier receiver = identifierService.findById(notificationDto.receiverId());
 
-        State state = stateRepository.findById(notificationDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + notificationDto.stateId() + " not found"));
+        State state = stateService.findById(notificationDto.stateId());
 
         Notification notification = new Notification();
         notification.setSender(sender);
@@ -53,14 +50,11 @@ public class NotificationServiceImpl implements NotificationService {
     public NotificationResponse updateNotification(Long id, NotificationDto notificationDto) {
         Notification notification = this.getNotificationById(id);
         
-        Identifier sender = identifierRepository.findById(notificationDto.senderId())
-                .orElseThrow(() -> new EntityNotFoundException("Sender identifier with ID " + notificationDto.senderId() + " not found"));
+        Identifier sender = identifierService.findById(notificationDto.senderId());
 
-        Identifier receiver = identifierRepository.findById(notificationDto.receiverId())
-                .orElseThrow(() -> new EntityNotFoundException("Receiver identifier with ID " + notificationDto.receiverId() + " not found"));
+        Identifier receiver = identifierService.findById(notificationDto.receiverId());
 
-        State state = stateRepository.findById(notificationDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + notificationDto.stateId() + " not found"));
+        State state = stateService.findById(notificationDto.stateId());
 
         notification.setSender(sender);
         notification.setReceiver(receiver);
@@ -127,10 +121,18 @@ public class NotificationServiceImpl implements NotificationService {
 
     private NotificationResponse mapToResponse(Notification notification) {
         // Buscar usuários para obter os nomes
-        User senderUser = userRepository.findById(notification.getSender().getUserId())
-                .orElse(null);
-        User receiverUser = userRepository.findById(notification.getReceiver().getUserId())
-                .orElse(null);
+        User senderUser = null;
+        User receiverUser = null;
+        try {
+            senderUser = userService.findById(notification.getSender().getUserId());
+        } catch (Exception e) {
+            // User not found, keep null
+        }
+        try {
+            receiverUser = userService.findById(notification.getReceiver().getUserId());
+        } catch (Exception e) {
+            // User not found, keep null
+        }
         
         return new NotificationResponse(
                 notification.getId(),
@@ -144,5 +146,28 @@ public class NotificationServiceImpl implements NotificationService {
                 notification.getCreatedAt(),
                 notification.getUpdatedAt()
         );
+    }
+
+    @Override
+    public Notification findById(Long id) {
+        return notificationRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Notification with ID " + id + " not found"));
+    }
+
+    @Override
+    public Notification findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        Notification entity = notificationRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Notification with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("Notification with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

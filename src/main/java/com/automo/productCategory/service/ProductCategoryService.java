@@ -21,4 +21,14 @@ public interface ProductCategoryService {
     List<ProductCategoryResponse> getProductCategoriesByState(Long stateId);
 
     void deleteProductCategory(Long id);
+    
+    /**
+     * Busca ProductCategory por ID - método obrigatório para comunicação entre services
+     */
+    ProductCategory findById(Long id);
+    
+    /**
+     * Busca ProductCategory por ID e estado específico (state_id = 1 por padrão)
+     */
+    ProductCategory findByIdAndStateId(Long id, Long stateId);
 } 

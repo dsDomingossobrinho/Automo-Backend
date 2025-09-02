@@ -5,11 +5,11 @@ import com.automo.dealProduct.entity.DealProduct;
 import com.automo.dealProduct.repository.DealProductRepository;
 import com.automo.dealProduct.response.DealProductResponse;
 import com.automo.deal.entity.Deal;
-import com.automo.deal.repository.DealRepository;
+import com.automo.deal.service.DealService;
 import com.automo.product.entity.Product;
-import com.automo.product.repository.ProductRepository;
+import com.automo.product.service.ProductService;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,20 +22,17 @@ import java.util.stream.Collectors;
 public class DealProductServiceImpl implements DealProductService {
 
     private final DealProductRepository dealProductRepository;
-    private final DealRepository dealRepository;
-    private final ProductRepository productRepository;
-    private final StateRepository stateRepository;
+    private final DealService dealService;
+    private final ProductService productService;
+    private final StateService stateService;
 
     @Override
     public DealProductResponse createDealProduct(DealProductDto dealProductDto) {
-        Deal deal = dealRepository.findById(dealProductDto.dealId())
-                .orElseThrow(() -> new EntityNotFoundException("Deal with ID " + dealProductDto.dealId() + " not found"));
+        Deal deal = dealService.findById(dealProductDto.dealId());
 
-        Product product = productRepository.findById(dealProductDto.productId())
-                .orElseThrow(() -> new EntityNotFoundException("Product with ID " + dealProductDto.productId() + " not found"));
+        Product product = productService.findById(dealProductDto.productId());
 
-        State state = stateRepository.findById(dealProductDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + dealProductDto.stateId() + " not found"));
+        State state = stateService.findById(dealProductDto.stateId());
 
         DealProduct dealProduct = new DealProduct();
         dealProduct.setDeal(deal);
@@ -50,14 +47,11 @@ public class DealProductServiceImpl implements DealProductService {
     public DealProductResponse updateDealProduct(Long id, DealProductDto dealProductDto) {
         DealProduct dealProduct = this.getDealProductById(id);
         
-        Deal deal = dealRepository.findById(dealProductDto.dealId())
-                .orElseThrow(() -> new EntityNotFoundException("Deal with ID " + dealProductDto.dealId() + " not found"));
+        Deal deal = dealService.findById(dealProductDto.dealId());
 
-        Product product = productRepository.findById(dealProductDto.productId())
-                .orElseThrow(() -> new EntityNotFoundException("Product with ID " + dealProductDto.productId() + " not found"));
+        Product product = productService.findById(dealProductDto.productId());
 
-        State state = stateRepository.findById(dealProductDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + dealProductDto.stateId() + " not found"));
+        State state = stateService.findById(dealProductDto.stateId());
 
         dealProduct.setDeal(deal);
         dealProduct.setProduct(product);
@@ -127,5 +121,28 @@ public class DealProductServiceImpl implements DealProductService {
                 dealProduct.getCreatedAt(),
                 dealProduct.getUpdatedAt()
         );
+    }
+
+    @Override
+    public DealProduct findById(Long id) {
+        return dealProductRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("DealProduct with ID " + id + " not found"));
+    }
+
+    @Override
+    public DealProduct findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        DealProduct entity = dealProductRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("DealProduct with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("DealProduct with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

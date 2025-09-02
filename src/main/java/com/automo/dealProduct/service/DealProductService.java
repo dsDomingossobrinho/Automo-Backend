@@ -25,4 +25,14 @@ public interface DealProductService {
     List<DealProductResponse> getDealProductsByProduct(Long productId);
 
     void deleteDealProduct(Long id);
+    
+    /**
+     * Busca DealProduct por ID - método obrigatório para comunicação entre services
+     */
+    DealProduct findById(Long id);
+    
+    /**
+     * Busca DealProduct por ID e estado específico (state_id = 1 por padrão)
+     */
+    DealProduct findByIdAndStateId(Long id, Long stateId);
 } 

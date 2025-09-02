@@ -1,13 +1,13 @@
 package com.automo.messageCount.service;
 
 import com.automo.lead.entity.Lead;
-import com.automo.lead.repository.LeadRepository;
+import com.automo.lead.service.LeadService;
 import com.automo.messageCount.dto.MessageCountDto;
 import com.automo.messageCount.entity.MessageCount;
 import com.automo.messageCount.repository.MessageCountRepository;
 import com.automo.messageCount.response.MessageCountResponse;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,16 +20,14 @@ import java.util.stream.Collectors;
 public class MessageCountServiceImpl implements MessageCountService {
 
     private final MessageCountRepository messageCountRepository;
-    private final LeadRepository leadRepository;
-    private final StateRepository stateRepository;
+    private final LeadService leadService;
+    private final StateService stateService;
 
     @Override
     public MessageCountResponse createMessageCount(MessageCountDto messageCountDto) {
-        Lead lead = leadRepository.findById(messageCountDto.leadId())
-                .orElseThrow(() -> new EntityNotFoundException("Lead with ID " + messageCountDto.leadId() + " not found"));
+        Lead lead = leadService.findById(messageCountDto.leadId());
 
-        State state = stateRepository.findById(messageCountDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + messageCountDto.stateId() + " not found"));
+        State state = stateService.findById(messageCountDto.stateId());
 
         MessageCount messageCount = new MessageCount();
         messageCount.setLead(lead);
@@ -44,11 +42,9 @@ public class MessageCountServiceImpl implements MessageCountService {
     public MessageCountResponse updateMessageCount(Long id, MessageCountDto messageCountDto) {
         MessageCount messageCount = this.getMessageCountById(id);
 
-        Lead lead = leadRepository.findById(messageCountDto.leadId())
-                .orElseThrow(() -> new EntityNotFoundException("Lead with ID " + messageCountDto.leadId() + " not found"));
+        Lead lead = leadService.findById(messageCountDto.leadId());
 
-        State state = stateRepository.findById(messageCountDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + messageCountDto.stateId() + " not found"));
+        State state = stateService.findById(messageCountDto.stateId());
 
         messageCount.setLead(lead);
         messageCount.setMessageCount(messageCountDto.messageCount());
@@ -110,5 +106,28 @@ public class MessageCountServiceImpl implements MessageCountService {
                 messageCount.getCreatedAt(),
                 messageCount.getUpdatedAt()
         );
+    }
+
+    @Override
+    public MessageCount findById(Long id) {
+        return messageCountRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("MessageCount with ID " + id + " not found"));
+    }
+
+    @Override
+    public MessageCount findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        MessageCount entity = messageCountRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("MessageCount with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("MessageCount with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

@@ -23,4 +23,14 @@ public interface AssociatedContactService {
     List<AssociatedContactResponse> getAssociatedContactsByState(Long stateId);
 
     void deleteAssociatedContact(Long id);
+    
+    /**
+     * Busca AssociatedContact por ID - método obrigatório para comunicação entre services
+     */
+    AssociatedContact findById(Long id);
+    
+    /**
+     * Busca AssociatedContact por ID e estado específico (state_id = 1 por padrão)
+     */
+    AssociatedContact findByIdAndStateId(Long id, Long stateId);
 } 

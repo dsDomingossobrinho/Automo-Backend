@@ -23,4 +23,14 @@ public interface MessageCountService {
     List<MessageCountResponse> getMessageCountsByState(Long stateId);
     
     void deleteMessageCount(Long id);
+    
+    /**
+     * Busca MessageCount por ID - método obrigatório para comunicação entre services
+     */
+    MessageCount findById(Long id);
+    
+    /**
+     * Busca MessageCount por ID e estado específico (state_id = 1 por padrão)
+     */
+    MessageCount findByIdAndStateId(Long id, Long stateId);
 } 

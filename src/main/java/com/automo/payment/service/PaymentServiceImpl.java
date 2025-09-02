@@ -5,9 +5,9 @@ import com.automo.payment.entity.Payment;
 import com.automo.payment.repository.PaymentRepository;
 import com.automo.payment.response.PaymentResponse;
 import com.automo.paymentType.entity.PaymentType;
-import com.automo.paymentType.repository.PaymentTypeRepository;
+import com.automo.paymentType.service.PaymentTypeService;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,16 +20,14 @@ import java.util.stream.Collectors;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final PaymentTypeRepository paymentTypeRepository;
-    private final StateRepository stateRepository;
+    private final PaymentTypeService paymentTypeService;
+    private final StateService stateService;
 
     @Override
     public PaymentResponse createPayment(PaymentDto paymentDto) {
-        PaymentType paymentType = paymentTypeRepository.findById(paymentDto.paymentTypeId())
-                .orElseThrow(() -> new EntityNotFoundException("PaymentType with ID " + paymentDto.paymentTypeId() + " not found"));
+        PaymentType paymentType = paymentTypeService.findById(paymentDto.paymentTypeId());
 
-        State state = stateRepository.findById(paymentDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + paymentDto.stateId() + " not found"));
+        State state = stateService.findById(paymentDto.stateId());
 
         Payment payment = new Payment();
         payment.setDocument(paymentDto.document());
@@ -45,11 +43,9 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentResponse updatePayment(Long id, PaymentDto paymentDto) {
         Payment payment = this.getPaymentById(id);
         
-        PaymentType paymentType = paymentTypeRepository.findById(paymentDto.paymentTypeId())
-                .orElseThrow(() -> new EntityNotFoundException("PaymentType with ID " + paymentDto.paymentTypeId() + " not found"));
+        PaymentType paymentType = paymentTypeService.findById(paymentDto.paymentTypeId());
 
-        State state = stateRepository.findById(paymentDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + paymentDto.stateId() + " not found"));
+        State state = stateService.findById(paymentDto.stateId());
 
         payment.setDocument(paymentDto.document());
         payment.setIdentifier(paymentDto.identifier());
@@ -120,5 +116,28 @@ public class PaymentServiceImpl implements PaymentService {
                 payment.getCreatedAt(),
                 payment.getUpdatedAt()
         );
+    }
+
+    @Override
+    public Payment findById(Long id) {
+        return paymentRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Payment with ID " + id + " not found"));
+    }
+
+    @Override
+    public Payment findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        Payment entity = paymentRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Payment with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("Payment with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

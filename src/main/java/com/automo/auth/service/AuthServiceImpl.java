@@ -9,16 +9,15 @@ import com.automo.auth.dto.LoginResponse;
 import com.automo.auth.entity.Auth;
 import com.automo.auth.repository.AuthRepository;
 import com.automo.auth.util.ContactValidator;
-import com.automo.authRoles.entity.AuthRoles;
-import com.automo.authRoles.repository.AuthRolesRepository;
+import com.automo.authRoles.service.AuthRolesService;
 import com.automo.config.security.JwtService;
 import com.automo.exception.UserAlreadyExistsException;
 import com.automo.exception.UserNotFoundException;
 import com.automo.exception.InvalidCredentialsException;
 import com.automo.role.entity.Role;
-import com.automo.role.repository.RoleRepository;
+import com.automo.role.service.RoleService;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,9 +31,9 @@ import java.util.Optional;
 public class AuthServiceImpl implements AuthService {
 
     private final AuthRepository authRepository;
-    private final RoleRepository roleRepository;
-    private final StateRepository stateRepository;
-    private final AuthRolesRepository authRolesRepository;
+    private final RoleService roleService;
+    private final StateService stateService;
+    private final AuthRolesService authRolesService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -51,10 +50,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Get default role and state
-        Role role = roleRepository.findByRole("USER")
-                .orElseThrow(() -> new IllegalStateException("Default USER role not found"));
-        State state = stateRepository.findByState("ACTIVE")
-                .orElseThrow(() -> new IllegalStateException("Default ACTIVE state not found"));
+        Role role = roleService.getRoleByRole("USER");
+        State state = stateService.getStateByState("ACTIVE");
 
         // Create new auth user
         Auth auth = new Auth();
@@ -67,11 +64,7 @@ public class AuthServiceImpl implements AuthService {
         authRepository.save(auth);
         
         // Criar associação AuthRoles com a role padrão
-        AuthRoles authRoles = new AuthRoles();
-        authRoles.setAuth(auth);
-        authRoles.setRole(role);
-        authRoles.setState(state);
-        authRolesRepository.save(authRoles);
+        authRolesService.createAuthRolesWithEntities(auth, role, state);
 
         // Generate token
         String token = jwtService.generateTokenForAuth(auth);
@@ -232,5 +225,28 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Optional<Auth> findByEmailOrUsernameOrContact(String emailOrContact) {
         return authRepository.findByEmailOrUsernameOrContact(emailOrContact);
+    }
+    
+    @Override
+    public Auth findById(Long id) {
+        return authRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Auth with ID " + id + " not found"));
+    }
+    
+    @Override
+    public Auth findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        Auth entity = authRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Auth with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("Auth with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

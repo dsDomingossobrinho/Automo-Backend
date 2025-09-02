@@ -4,9 +4,9 @@ import com.automo.agentAreas.dto.AgentAreasDto;
 import com.automo.agentAreas.entity.AgentAreas;
 import com.automo.agentAreas.repository.AgentAreasRepository;
 import com.automo.agentAreas.response.AgentAreasResponse;
-import com.automo.agent.repository.AgentRepository;
-import com.automo.area.repository.AreaRepository;
-import com.automo.state.repository.StateRepository;
+import com.automo.agent.service.AgentService;
+import com.automo.area.service.AreaService;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,20 +21,17 @@ import java.util.stream.Collectors;
 public class AgentAreasServiceImpl implements AgentAreasService {
 
     private final AgentAreasRepository agentAreasRepository;
-    private final AgentRepository agentRepository;
-    private final AreaRepository areaRepository;
-    private final StateRepository stateRepository;
+    private final AgentService agentService;
+    private final AreaService areaService;
+    private final StateService stateService;
 
     @Override
     public AgentAreasResponse createAgentAreas(AgentAreasDto agentAreasDto) {
-        var agent = agentRepository.findById(agentAreasDto.agentId())
-                .orElseThrow(() -> new EntityNotFoundException("Agent with ID " + agentAreasDto.agentId() + " not found"));
+        var agent = agentService.findById(agentAreasDto.agentId());
 
-        var area = areaRepository.findById(agentAreasDto.areaId())
-                .orElseThrow(() -> new EntityNotFoundException("Area with ID " + agentAreasDto.areaId() + " not found"));
+        var area = areaService.findById(agentAreasDto.areaId());
 
-        var state = stateRepository.findById(agentAreasDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + agentAreasDto.stateId() + " not found"));
+        var state = stateService.findById(agentAreasDto.stateId());
 
         // Verificar se a associação já existe
         if (agentAreasRepository.existsByAgentIdAndAreaId(agentAreasDto.agentId(), agentAreasDto.areaId())) {
@@ -54,14 +51,11 @@ public class AgentAreasServiceImpl implements AgentAreasService {
     public AgentAreasResponse updateAgentAreas(Long id, AgentAreasDto agentAreasDto) {
         var agentAreas = this.getAgentAreasById(id);
         
-        var agent = agentRepository.findById(agentAreasDto.agentId())
-                .orElseThrow(() -> new EntityNotFoundException("Agent with ID " + agentAreasDto.agentId() + " not found"));
+        var agent = agentService.findById(agentAreasDto.agentId());
 
-        var area = areaRepository.findById(agentAreasDto.areaId())
-                .orElseThrow(() -> new EntityNotFoundException("Area with ID " + agentAreasDto.areaId() + " not found"));
+        var area = areaService.findById(agentAreasDto.areaId());
 
-        var state = stateRepository.findById(agentAreasDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + agentAreasDto.stateId() + " not found"));
+        var state = stateService.findById(agentAreasDto.stateId());
 
         agentAreas.setAgent(agent);
         agentAreas.setArea(area);
@@ -138,5 +132,30 @@ public class AgentAreasServiceImpl implements AgentAreasService {
                 agentAreas.getCreatedAt(),
                 agentAreas.getUpdatedAt()
         );
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public AgentAreas findById(Long id) {
+        return agentAreasRepository.findByIdWithAgentAreaAndState(id)
+                .orElseThrow(() -> new EntityNotFoundException("AgentAreas with ID " + id + " not found"));
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public AgentAreas findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        AgentAreas entity = agentAreasRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("AgentAreas with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("AgentAreas with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

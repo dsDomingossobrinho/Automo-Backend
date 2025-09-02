@@ -25,4 +25,14 @@ public interface AgentService {
     List<AgentResponse> searchAgentsByName(String name);
 
     void deleteAgent(Long id);
+    
+    /**
+     * Busca Agent por ID - método obrigatório para comunicação entre services
+     */
+    Agent findById(Long id);
+    
+    /**
+     * Busca Agent por ID e estado específico (state_id = 1 por padrão)
+     */
+    Agent findByIdAndStateId(Long id, Long stateId);
 } 

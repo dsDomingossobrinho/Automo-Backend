@@ -4,9 +4,9 @@ import com.automo.agent.dto.AgentDto;
 import com.automo.agent.entity.Agent;
 import com.automo.agent.repository.AgentRepository;
 import com.automo.agent.response.AgentResponse;
-import com.automo.agentAreas.repository.AgentAreasRepository;
+import com.automo.agentAreas.service.AgentAreasService;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,13 +19,12 @@ import java.util.stream.Collectors;
 public class AgentServiceImpl implements AgentService {
 
     private final AgentRepository agentRepository;
-    private final StateRepository stateRepository;
-    private final AgentAreasRepository agentAreasRepository;
+    private final StateService stateService;
+    private final AgentAreasService agentAreasService;
 
     @Override
     public AgentResponse createAgent(AgentDto agentDto) {
-        State state = stateRepository.findById(agentDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + agentDto.stateId() + " not found"));
+        State state = stateService.findById(agentDto.stateId());
 
         Agent agent = new Agent();
         agent.setName(agentDto.name());
@@ -43,8 +42,7 @@ public class AgentServiceImpl implements AgentService {
     public AgentResponse updateAgent(Long id, AgentDto agentDto) {
         Agent agent = this.getAgentById(id);
         
-        State state = stateRepository.findById(agentDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + agentDto.stateId() + " not found"));
+        State state = stateService.findById(agentDto.stateId());
 
         agent.setName(agentDto.name());
         agent.setDescription(agentDto.description());
@@ -86,8 +84,11 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     public List<AgentResponse> getAgentsByArea(Long areaId) {
-        return agentAreasRepository.findByAreaId(areaId).stream()
-                .map(agentArea -> mapToResponse(agentArea.getAgent()))
+        return agentAreasService.getAgentAreasByArea(areaId).stream()
+                .map(agentAreaResponse -> {
+                    Agent agent = this.findById(agentAreaResponse.agentId());
+                    return mapToResponse(agent);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -119,5 +120,28 @@ public class AgentServiceImpl implements AgentService {
                 agent.getCreatedAt(),
                 agent.getUpdatedAt()
         );
+    }
+    
+    @Override
+    public Agent findById(Long id) {
+        return agentRepository.findByIdWithState(id)
+                .orElseThrow(() -> new EntityNotFoundException("Agent with ID " + id + " not found"));
+    }
+    
+    @Override
+    public Agent findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        Agent entity = agentRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Agent with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("Agent with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

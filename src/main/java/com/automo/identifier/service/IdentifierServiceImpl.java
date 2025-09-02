@@ -5,11 +5,11 @@ import com.automo.identifier.entity.Identifier;
 import com.automo.identifier.repository.IdentifierRepository;
 import com.automo.identifier.response.IdentifierResponse;
 import com.automo.identifierType.entity.IdentifierType;
-import com.automo.identifierType.repository.IdentifierTypeRepository;
+import com.automo.identifierType.service.IdentifierTypeService;
 import com.automo.user.entity.User;
-import com.automo.user.repository.UserRepository;
+import com.automo.user.service.UserService;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,20 +22,17 @@ import java.util.stream.Collectors;
 public class IdentifierServiceImpl implements IdentifierService {
 
     private final IdentifierRepository identifierRepository;
-    private final UserRepository userRepository;
-    private final IdentifierTypeRepository identifierTypeRepository;
-    private final StateRepository stateRepository;
+    private final UserService userService;
+    private final IdentifierTypeService identifierTypeService;
+    private final StateService stateService;
 
     @Override
     public IdentifierResponse createIdentifier(IdentifierDto identifierDto) {
-        User user = userRepository.findById(identifierDto.userId())
-                .orElseThrow(() -> new EntityNotFoundException("User with ID " + identifierDto.userId() + " not found"));
+        User user = userService.findById(identifierDto.userId());
 
-        IdentifierType identifierType = identifierTypeRepository.findById(identifierDto.identifierTypeId())
-                .orElseThrow(() -> new EntityNotFoundException("IdentifierType with ID " + identifierDto.identifierTypeId() + " not found"));
+        IdentifierType identifierType = identifierTypeService.findById(identifierDto.identifierTypeId());
 
-        State state = stateRepository.findById(identifierDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + identifierDto.stateId() + " not found"));
+        State state = stateService.findById(identifierDto.stateId());
 
         Identifier identifier = new Identifier();
         identifier.setUserId(identifierDto.userId());
@@ -50,14 +47,11 @@ public class IdentifierServiceImpl implements IdentifierService {
     public IdentifierResponse updateIdentifier(Long id, IdentifierDto identifierDto) {
         Identifier identifier = this.getIdentifierById(id);
         
-        User user = userRepository.findById(identifierDto.userId())
-                .orElseThrow(() -> new EntityNotFoundException("User with ID " + identifierDto.userId() + " not found"));
+        User user = userService.findById(identifierDto.userId());
 
-        IdentifierType identifierType = identifierTypeRepository.findById(identifierDto.identifierTypeId())
-                .orElseThrow(() -> new EntityNotFoundException("IdentifierType with ID " + identifierDto.identifierTypeId() + " not found"));
+        IdentifierType identifierType = identifierTypeService.findById(identifierDto.identifierTypeId());
 
-        State state = stateRepository.findById(identifierDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + identifierDto.stateId() + " not found"));
+        State state = stateService.findById(identifierDto.stateId());
 
         identifier.setUserId(identifierDto.userId());
         identifier.setIdentifierType(identifierType);
@@ -119,18 +113,14 @@ public class IdentifierServiceImpl implements IdentifierService {
     public void createIdentifierForEntity(Long userId, String entityType, Long stateId) {
         try {
             // Buscar tipo de identifier padrão para a entidade
-            IdentifierType identifierType = identifierTypeRepository.findByType(entityType)
+            IdentifierType identifierType = identifierTypeService.findByType(entityType)
                     .orElseGet(() -> {
-                        // Se não existir, criar um tipo padrão
-                        IdentifierType defaultType = new IdentifierType();
-                        defaultType.setType(entityType);
-                        defaultType.setDescription(entityType + " identifier");
-                        return identifierTypeRepository.save(defaultType);
+                        // Se não existir, criar um tipo padrão via service
+                        return identifierTypeService.createDefaultIdentifierType(entityType, entityType + " identifier");
                     });
 
             // Buscar o estado
-            State state = stateRepository.findById(stateId)
-                    .orElseThrow(() -> new EntityNotFoundException("State with ID " + stateId + " not found"));
+            State state = stateService.findById(stateId);
 
             // Criar identifier
             Identifier identifier = new Identifier();
@@ -147,8 +137,12 @@ public class IdentifierServiceImpl implements IdentifierService {
 
     private IdentifierResponse mapToResponse(Identifier identifier) {
         // Buscar o usuário para obter o nome
-        User user = userRepository.findById(identifier.getUserId())
-                .orElse(null);
+        User user = null;
+        try {
+            user = userService.findById(identifier.getUserId());
+        } catch (Exception e) {
+            // User not found, keep null
+        }
         
         return new IdentifierResponse(
                 identifier.getId(),
@@ -175,5 +169,28 @@ public class IdentifierServiceImpl implements IdentifierService {
                 identifier.getCreatedAt(),
                 identifier.getUpdatedAt()
         );
+    }
+
+    @Override
+    public Identifier findById(Long id) {
+        return identifierRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Identifier with ID " + id + " not found"));
+    }
+
+    @Override
+    public Identifier findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        Identifier entity = identifierRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Identifier with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("Identifier with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
     }
 } 

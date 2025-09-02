@@ -21,4 +21,14 @@ public interface AreaService {
     List<AreaResponse> getAreasByState(Long stateId);
 
     void deleteArea(Long id);
+    
+    /**
+     * Busca Area por ID - método obrigatório para comunicação entre services
+     */
+    Area findById(Long id);
+    
+    /**
+     * Busca Area por ID e estado específico (state_id = 1 por padrão)
+     */
+    Area findByIdAndStateId(Long id, Long stateId);
 } 

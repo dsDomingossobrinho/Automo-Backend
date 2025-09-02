@@ -78,4 +78,19 @@ public class StateServiceImpl implements StateService {
                 state.getUpdatedAt()
         );
     }
+    
+    @Override
+    public State findById(Long id) {
+        return stateRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("State with ID " + id + " not found"));
+    }
+    
+    @Override
+    public State findByIdAndStateId(Long id, Long stateId) {
+        State entity = stateRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("State with ID " + id + " not found"));
+        
+        // For State entity, return the entity regardless of stateId parameter
+        return entity;
+    }
 } 

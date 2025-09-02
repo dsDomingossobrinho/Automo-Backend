@@ -1,15 +1,15 @@
 package com.automo.authRoles.service;
 
 import com.automo.auth.entity.Auth;
-import com.automo.auth.repository.AuthRepository;
+import com.automo.auth.service.AuthService;
 import com.automo.authRoles.dto.AuthRolesDto;
 import com.automo.authRoles.entity.AuthRoles;
 import com.automo.authRoles.repository.AuthRolesRepository;
 import com.automo.authRoles.response.AuthRolesResponse;
 import com.automo.role.entity.Role;
-import com.automo.role.repository.RoleRepository;
+import com.automo.role.service.RoleService;
 import com.automo.state.entity.State;
-import com.automo.state.repository.StateRepository;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,9 +23,9 @@ import java.util.List;
 public class AuthRolesServiceImpl implements AuthRolesService {
 
     private final AuthRolesRepository authRolesRepository;
-    private final AuthRepository authRepository;
-    private final RoleRepository roleRepository;
-    private final StateRepository stateRepository;
+    private final AuthService authService;
+    private final RoleService roleService;
+    private final StateService stateService;
 
     @Override
     public AuthRolesResponse createAuthRoles(AuthRolesDto authRolesDto) {
@@ -35,14 +35,11 @@ public class AuthRolesServiceImpl implements AuthRolesService {
         }
 
         // Buscar entidades relacionadas
-        Auth auth = authRepository.findById(authRolesDto.authId())
-                .orElseThrow(() -> new EntityNotFoundException("Auth with ID " + authRolesDto.authId() + " not found"));
+        Auth auth = authService.findById(authRolesDto.authId());
         
-        Role role = roleRepository.findById(authRolesDto.roleId())
-                .orElseThrow(() -> new EntityNotFoundException("Role with ID " + authRolesDto.roleId() + " not found"));
+        Role role = roleService.findById(authRolesDto.roleId());
         
-        State state = stateRepository.findById(authRolesDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + authRolesDto.stateId() + " not found"));
+        State state = stateService.findById(authRolesDto.stateId());
 
         // Criar nova associação
         AuthRoles authRoles = new AuthRoles();
@@ -84,14 +81,11 @@ public class AuthRolesServiceImpl implements AuthRolesService {
         }
 
         // Buscar entidades relacionadas
-        Auth auth = authRepository.findById(authRolesDto.authId())
-                .orElseThrow(() -> new EntityNotFoundException("Auth with ID " + authRolesDto.authId() + " not found"));
+        Auth auth = authService.findById(authRolesDto.authId());
         
-        Role role = roleRepository.findById(authRolesDto.roleId())
-                .orElseThrow(() -> new EntityNotFoundException("Role with ID " + authRolesDto.roleId() + " not found"));
+        Role role = roleService.findById(authRolesDto.roleId());
         
-        State state = stateRepository.findById(authRolesDto.stateId())
-                .orElseThrow(() -> new EntityNotFoundException("State with ID " + authRolesDto.stateId() + " not found"));
+        State state = stateService.findById(authRolesDto.stateId());
 
         // Atualizar associação
         authRoles.setAuth(auth);
@@ -147,5 +141,44 @@ public class AuthRolesServiceImpl implements AuthRolesService {
                 authRoles.getCreatedAt(),
                 authRoles.getUpdatedAt()
         );
+    }
+
+    @Override
+    public AuthRoles findById(Long id) {
+        return authRolesRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("AuthRoles with ID " + id + " not found"));
+    }
+
+    @Override
+    public AuthRoles findByIdAndStateId(Long id, Long stateId) {
+        if (stateId == null) {
+            stateId = 1L; // Estado padrão (ativo)
+        }
+        
+        AuthRoles entity = authRolesRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("AuthRoles with ID " + id + " not found"));
+        
+        // For entities with state relationship, check if entity's state matches required state
+        if (entity.getState() != null && !entity.getState().getId().equals(stateId)) {
+            throw new jakarta.persistence.EntityNotFoundException("AuthRoles with ID " + id + " and state ID " + stateId + " not found");
+        }
+        
+        return entity;
+    }
+    
+    @Override
+    public void createAuthRolesWithEntities(com.automo.auth.entity.Auth auth, com.automo.role.entity.Role role, com.automo.state.entity.State state) {
+        // Verificar se a associação já existe
+        if (authRolesRepository.existsByAuthIdAndRoleId(auth.getId(), role.getId())) {
+            throw new RuntimeException("Auth already has this role assigned");
+        }
+
+        // Criar nova associação
+        AuthRoles authRoles = new AuthRoles();
+        authRoles.setAuth(auth);
+        authRoles.setRole(role);
+        authRoles.setState(state);
+
+        authRolesRepository.save(authRoles);
     }
 } 

@@ -74,4 +74,19 @@ public class LeadTypeServiceImpl implements LeadTypeService {
                 leadType.getUpdatedAt()
         );
     }
+
+    @Override
+    public LeadType findById(Long id) {
+        return leadTypeRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("LeadType with ID " + id + " not found"));
+    }
+
+    @Override
+    public LeadType findByIdAndStateId(Long id, Long stateId) {
+        LeadType entity = leadTypeRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("LeadType with ID " + id + " not found"));
+        
+        // For entities without state relationship, return the entity regardless of stateId
+        return entity;
+    }
 } 

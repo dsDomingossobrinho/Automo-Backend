@@ -19,4 +19,14 @@ public interface AccountTypeService {
     AccountTypeResponse getAccountTypeByIdResponse(Long id);
 
     void deleteAccountType(Long id);
+    
+    /**
+     * Busca AccountType por ID - método obrigatório para comunicação entre services
+     */
+    AccountType findById(Long id);
+    
+    /**
+     * Busca AccountType por ID e estado específico (state_id = 1 por padrão)
+     */
+    AccountType findByIdAndStateId(Long id, Long stateId);
 } 

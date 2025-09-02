@@ -3,6 +3,8 @@ package com.automo.admin.controller;
 import com.automo.admin.dto.AdminDto;
 import com.automo.admin.response.AdminResponse;
 import com.automo.admin.service.AdminService;
+import com.automo.model.dto.PaginatedResponse;
+import com.automo.model.dto.PaginationRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -59,5 +61,19 @@ public class AdminController {
     public ResponseEntity<Void> deleteAdmin(@PathVariable Long id) {
         adminService.deleteAdmin(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(description = "Get paginated list of admins with search", 
+               summary = "Get paginated admins with optional search")
+    @ApiResponse(responseCode = "200", description = "Paginated admins retrieved successfully")
+    @GetMapping("/paginated")
+    public ResponseEntity<PaginatedResponse<AdminResponse>> getAdminsPaginated(
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDirection) {
+        PaginationRequest request = new PaginationRequest(search, page, size, sortBy, sortDirection);
+        return ResponseEntity.ok(adminService.getEntitiesPaginated(request));
     }
 } 

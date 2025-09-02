@@ -23,4 +23,14 @@ public interface PromotionService {
     PromotionResponse getPromotionByCode(String code);
 
     void deletePromotion(Long id);
+    
+    /**
+     * Busca Promotion por ID - método obrigatório para comunicação entre services
+     */
+    Promotion findById(Long id);
+    
+    /**
+     * Busca Promotion por ID e estado específico (state_id = 1 por padrão)
+     */
+    Promotion findByIdAndStateId(Long id, Long stateId);
 } 
