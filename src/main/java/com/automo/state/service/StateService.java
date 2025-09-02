@@ -37,4 +37,9 @@ public interface StateService {
      * Busca State por ID e estado específico (state_id = 1 por padrão)
      */
     State findByIdAndStateId(Long id, Long stateId);
+    
+    /**
+     * Obtém o estado ELIMINATED para operações de soft delete
+     */
+    State getEliminatedState();
 } 

@@ -68,7 +68,9 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(readOnly = true)
     public List<NotificationResponse> getAllNotifications() {
+        State eliminatedState = stateService.getEliminatedState();
         return notificationRepository.findAll().stream()
+                .filter(notification -> notification.getState() != null && !notification.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -113,10 +115,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void deleteNotification(Long id) {
-        if (!notificationRepository.existsById(id)) {
-            throw new EntityNotFoundException("Notification with ID " + id + " not found");
-        }
-        notificationRepository.deleteById(id);
+        Notification notification = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        notification.setState(eliminatedState);
+        
+        notificationRepository.save(notification);
     }
 
     private NotificationResponse mapToResponse(Notification notification) {

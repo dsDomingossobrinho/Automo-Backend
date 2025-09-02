@@ -69,7 +69,9 @@ public class AdminServiceImpl extends BaseServiceImpl<Admin, AdminResponse, Long
 
     @Override
     public List<AdminResponse> getAllAdmins() {
+        State eliminatedState = stateService.getEliminatedState();
         return adminRepository.findAllWithAuthAndState().stream()
+                .filter(admin -> admin.getState() != null && !admin.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -102,10 +104,13 @@ public class AdminServiceImpl extends BaseServiceImpl<Admin, AdminResponse, Long
 
     @Override
     public void deleteAdmin(Long id) {
-        if (!adminRepository.existsById(id)) {
-            throw new EntityNotFoundException("Admin with ID " + id + " not found");
-        }
-        adminRepository.deleteById(id);
+        Admin admin = this.getAdminById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        admin.setState(eliminatedState);
+        
+        adminRepository.save(admin);
     }
 
     @Override

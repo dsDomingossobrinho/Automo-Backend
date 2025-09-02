@@ -62,7 +62,9 @@ public class AssociatedContactServiceImpl implements AssociatedContactService {
     @Override
     @Transactional(readOnly = true)
     public List<AssociatedContactResponse> getAllAssociatedContacts() {
+        State eliminatedState = stateService.getEliminatedState();
         return associatedContactRepository.findAllWithIdentifierAndState().stream()
+                .filter(contact -> contact.getState() != null && !contact.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -100,10 +102,13 @@ public class AssociatedContactServiceImpl implements AssociatedContactService {
 
     @Override
     public void deleteAssociatedContact(Long id) {
-        if (!associatedContactRepository.existsById(id)) {
-            throw new RuntimeException("AssociatedContact not found");
-        }
-        associatedContactRepository.deleteById(id);
+        AssociatedContact associatedContact = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        associatedContact.setState(eliminatedState);
+        
+        associatedContactRepository.save(associatedContact);
     }
 
     private AssociatedContactResponse mapToResponse(AssociatedContact associatedContact) {

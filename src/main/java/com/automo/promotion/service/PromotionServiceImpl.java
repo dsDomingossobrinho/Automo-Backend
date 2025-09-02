@@ -51,7 +51,9 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public List<PromotionResponse> getAllPromotions() {
+        State eliminatedState = stateService.getEliminatedState();
         return promotionRepository.findAll().stream()
+                .filter(promotion -> promotion.getState() != null && !promotion.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -84,10 +86,13 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public void deletePromotion(Long id) {
-        if (!promotionRepository.existsById(id)) {
-            throw new EntityNotFoundException("Promotion with ID " + id + " not found");
-        }
-        promotionRepository.deleteById(id);
+        Promotion promotion = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        promotion.setState(eliminatedState);
+        
+        promotionRepository.save(promotion);
     }
 
     private PromotionResponse mapToResponse(Promotion promotion) {

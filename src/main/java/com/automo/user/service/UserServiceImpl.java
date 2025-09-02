@@ -4,6 +4,8 @@ import com.automo.user.dto.UserDto;
 import com.automo.user.entity.User;
 import com.automo.user.repository.UserRepository;
 import com.automo.user.response.UserResponse;
+import com.automo.state.entity.State;
+import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final StateService stateService;
 
     @Override
     public UserResponse createUser(UserDto userDto) {
@@ -42,7 +45,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponse> getAllUsers() {
+        State eliminatedState = stateService.getEliminatedState();
         return userRepository.findAll().stream()
+                .filter(user -> user.getState() != null && !user.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -75,10 +80,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new EntityNotFoundException("User with ID " + id + " not found");
-        }
-        userRepository.deleteById(id);
+        User user = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        user.setState(eliminatedState);
+        
+        userRepository.save(user);
     }
 
     private UserResponse mapToResponse(User user) {

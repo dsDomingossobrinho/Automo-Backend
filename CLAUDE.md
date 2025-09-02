@@ -69,9 +69,11 @@ Base package: `com.automo`
 ### Key Architectural Patterns
 1. **Layered Architecture**: Controller → Service → Repository → Entity
 2. **Feature-Based Packages**: Each business domain is self-contained
-3. **JWT Security**: Stateless authentication with role-based access control
-4. **Multi-Role System**: Many-to-many relationship between users and roles
-5. **Base Entity Pattern**: `AbstractModel` provides id, createdAt, updatedAt
+3. **Service-to-Service Communication**: Services only communicate with other services, never directly with repositories from other domains
+4. **JWT Security**: Stateless authentication with role-based access control
+5. **Multi-Role System**: Many-to-many relationship between users and roles
+6. **Base Entity Pattern**: `AbstractModel` provides id, createdAt, updatedAt
+7. **Soft Delete Pattern**: Records are marked as "ELIMINATED" instead of physical deletion
 
 ### Authentication & Authorization
 - **JWT Utils**: Use `JwtUtils` bean to access current user information
@@ -99,11 +101,67 @@ String email = jwtUtils.getCurrentUserEmail();
 List<Long> allRoles = jwtUtils.getCurrentUserRoleIds();
 ```
 
+### Service Architecture Rules
+**CRITICAL: Service-to-Service Communication Pattern**
+
+All services MUST follow these rules:
+1. **Repository Access**: Services can ONLY access their own repository directly
+2. **Cross-Domain Access**: To access other entities, services MUST use other services, never repositories
+3. **Required Methods**: Every service MUST implement:
+   - `findById(Long id)` - For inter-service communication
+   - `findByIdAndStateId(Long id, Long stateId)` - For state-aware lookups
+
+```java
+// ❌ WRONG: AdminService accessing StateRepository directly
+@Service
+public class AdminServiceImpl {
+    private final StateRepository stateRepository; // VIOLATION!
+    
+    public void someMethod() {
+        State state = stateRepository.findById(id); // WRONG!
+    }
+}
+
+// ✅ CORRECT: AdminService using StateService
+@Service
+public class AdminServiceImpl {
+    private final StateService stateService; // CORRECT!
+    
+    public void someMethod() {
+        State state = stateService.findById(id); // CORRECT!
+    }
+}
+```
+
+### Soft Delete Implementation
+**All entities with state relationships use soft delete:**
+
+- **Delete Operations**: Set entity state to "ELIMINATED" instead of physical deletion
+- **State Management**: Uses `StateService.getEliminatedState()` to get ELIMINATED state
+- **Data Preservation**: Records remain in database for audit trails and recovery
+- **Filter Queries**: List methods should filter out ELIMINATED records
+
+```java
+// Soft delete pattern
+@Override
+public void deleteEntity(Long id) {
+    Entity entity = this.findById(id);
+    State eliminatedState = stateService.getEliminatedState();
+    entity.setState(eliminatedState);
+    entityRepository.save(entity);
+}
+```
+
+**Entities with physical delete (no state relationship):**
+- AccountType, PaymentType, OrganizationType
+- IdentifierType, NotificationType, LeadType, Role
+
 ### Database Configuration
 - **Connection**: `jdbc:postgresql://localhost:5432/automo_db`
 - **DDL Mode**: `update` (auto-updates schema)
 - **Auditing**: Enabled via `@EnableJpaAuditing`
 - **Data Seeding**: `DataSeeder` class initializes base data
+- **States Available**: ACTIVE, INACTIVE, PENDING, ELIMINATED, UNREAD, READ, PENDING PAYMENT, PAYMENT IN ANALYSIS, APPROVED PAYMENT
 
 ### API Documentation
 - **Swagger UI**: `http://localhost:8080/swagger-ui.html`
@@ -133,3 +191,10 @@ List<Long> allRoles = jwtUtils.getCurrentUserRoleIds();
 - All entities should extend `AbstractModel` for auditing
 - JWT tokens expire after 4 hours, refresh tokens after 7 days
 - Use environment variables for all sensitive configuration
+
+**CRITICAL Architecture Rules:**
+- **Service Communication**: Services ONLY communicate with other services, NEVER with repositories from other domains
+- **Required Service Methods**: Every service MUST implement `findById(Long id)` and `findByIdAndStateId(Long id, Long stateId)`
+- **Soft Delete**: Use `stateService.getEliminatedState()` for delete operations on entities with state relationships
+- **State Filtering**: List methods should filter out ELIMINATED records to hide soft-deleted data
+- **Physical Delete**: Only use for entities without state relationships (AccountType, PaymentType, etc.)

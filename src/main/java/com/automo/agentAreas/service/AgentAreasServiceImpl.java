@@ -6,6 +6,7 @@ import com.automo.agentAreas.repository.AgentAreasRepository;
 import com.automo.agentAreas.response.AgentAreasResponse;
 import com.automo.agent.service.AgentService;
 import com.automo.area.service.AreaService;
+import com.automo.state.entity.State;
 import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -68,7 +69,9 @@ public class AgentAreasServiceImpl implements AgentAreasService {
     @Override
     @Transactional(readOnly = true)
     public List<AgentAreasResponse> getAllAgentAreas() {
+        State eliminatedState = stateService.getEliminatedState();
         return agentAreasRepository.findAllWithAgentAreaAndState().stream()
+                .filter(agentArea -> agentArea.getState() != null && !agentArea.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -114,10 +117,13 @@ public class AgentAreasServiceImpl implements AgentAreasService {
 
     @Override
     public void deleteAgentAreas(Long id) {
-        if (!agentAreasRepository.existsById(id)) {
-            throw new EntityNotFoundException("AgentAreas with ID " + id + " not found");
-        }
-        agentAreasRepository.deleteById(id);
+        AgentAreas agentAreas = this.getAgentAreasById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        var eliminatedState = stateService.getEliminatedState();
+        agentAreas.setState(eliminatedState);
+        
+        agentAreasRepository.save(agentAreas);
     }
 
     private AgentAreasResponse mapToResponse(AgentAreas agentAreas) {

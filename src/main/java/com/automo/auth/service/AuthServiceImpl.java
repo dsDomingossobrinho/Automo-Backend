@@ -18,7 +18,7 @@ import com.automo.role.entity.Role;
 import com.automo.role.service.RoleService;
 import com.automo.state.entity.State;
 import com.automo.state.service.StateService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private final AuthRepository authRepository;
@@ -38,6 +37,24 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final OtpService otpService;
+
+    public AuthServiceImpl(AuthRepository authRepository,
+                           RoleService roleService,
+                           StateService stateService,
+                           @Lazy AuthRolesService authRolesService,
+                           PasswordEncoder passwordEncoder,
+                           JwtService jwtService,
+                           AuthenticationManager authenticationManager,
+                           OtpService otpService) {
+        this.authRepository = authRepository;
+        this.roleService = roleService;
+        this.stateService = stateService;
+        this.authRolesService = authRolesService;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+        this.otpService = otpService;
+    }
 
     @Override
     public AuthResponse register(RegisterRequest request) {

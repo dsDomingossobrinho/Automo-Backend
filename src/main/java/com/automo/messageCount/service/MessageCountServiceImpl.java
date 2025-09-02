@@ -56,7 +56,9 @@ public class MessageCountServiceImpl implements MessageCountService {
 
     @Override
     public List<MessageCountResponse> getAllMessageCounts() {
+        State eliminatedState = stateService.getEliminatedState();
         return messageCountRepository.findAll().stream()
+                .filter(messageCount -> messageCount.getState() != null && !messageCount.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -89,10 +91,13 @@ public class MessageCountServiceImpl implements MessageCountService {
 
     @Override
     public void deleteMessageCount(Long id) {
-        if (!messageCountRepository.existsById(id)) {
-            throw new EntityNotFoundException("MessageCount with ID " + id + " not found");
-        }
-        messageCountRepository.deleteById(id);
+        MessageCount messageCount = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        messageCount.setState(eliminatedState);
+        
+        messageCountRepository.save(messageCount);
     }
 
     private MessageCountResponse mapToResponse(MessageCount messageCount) {

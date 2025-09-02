@@ -49,7 +49,11 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
 
     @Override
     public List<ProductCategoryResponse> getAllProductCategories() {
-        return productCategoryRepository.findAllResponse();
+        State eliminatedState = stateService.getEliminatedState();
+        return productCategoryRepository.findAll().stream()
+                .filter(category -> category.getState() != null && !category.getState().getId().equals(eliminatedState.getId()))
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Override
@@ -73,10 +77,13 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
 
     @Override
     public void deleteProductCategory(Long id) {
-        if (!productCategoryRepository.existsById(id)) {
-            throw new EntityNotFoundException("ProductCategory with ID " + id + " not found");
-        }
-        productCategoryRepository.deleteById(id);
+        ProductCategory productCategory = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        productCategory.setState(eliminatedState);
+        
+        productCategoryRepository.save(productCategory);
     }
 
     private ProductCategoryResponse mapToResponse(ProductCategory productCategory) {

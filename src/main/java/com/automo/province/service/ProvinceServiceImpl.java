@@ -56,7 +56,11 @@ public class ProvinceServiceImpl implements ProvinceService {
 
     @Override
     public List<ProvinceResponse> getAllProvinces() {
-        return provinceRepository.findAllResponse();
+        State eliminatedState = stateService.getEliminatedState();
+        return provinceRepository.findAll().stream()
+                .filter(province -> province.getState() != null && !province.getState().getId().equals(eliminatedState.getId()))
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Override
@@ -85,10 +89,13 @@ public class ProvinceServiceImpl implements ProvinceService {
 
     @Override
     public void deleteProvince(Long id) {
-        if (!provinceRepository.existsById(id)) {
-            throw new EntityNotFoundException("Province with ID " + id + " not found");
-        }
-        provinceRepository.deleteById(id);
+        Province province = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        province.setState(eliminatedState);
+        
+        provinceRepository.save(province);
     }
 
     private ProvinceResponse mapToResponse(Province province) {

@@ -53,7 +53,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductResponse> getAllProducts() {
+        State eliminatedState = stateService.getEliminatedState();
         return productRepository.findAll().stream()
+                .filter(product -> product.getState() != null && !product.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -79,10 +81,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProduct(Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new EntityNotFoundException("Product with ID " + id + " not found");
-        }
-        productRepository.deleteById(id);
+        Product product = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        product.setState(eliminatedState);
+        
+        productRepository.save(product);
     }
 
     private ProductResponse mapToResponse(Product product) {

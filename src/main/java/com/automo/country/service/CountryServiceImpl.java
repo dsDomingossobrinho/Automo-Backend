@@ -51,7 +51,11 @@ public class CountryServiceImpl implements CountryService {
 
     @Override
     public List<CountryResponse> getAllCountries() {
-        return countryRepository.findAllResponse();
+        State eliminatedState = stateService.getEliminatedState();
+        return countryRepository.findAll().stream()
+                .filter(country -> country.getState() != null && !country.getState().getId().equals(eliminatedState.getId()))
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Override
@@ -75,10 +79,13 @@ public class CountryServiceImpl implements CountryService {
 
     @Override
     public void deleteCountry(Long id) {
-        if (!countryRepository.existsById(id)) {
-            throw new EntityNotFoundException("Country with ID " + id + " not found");
-        }
-        countryRepository.deleteById(id);
+        Country country = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        country.setState(eliminatedState);
+        
+        countryRepository.save(country);
     }
 
     private CountryResponse mapToResponse(Country country) {

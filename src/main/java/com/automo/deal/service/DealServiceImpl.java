@@ -81,7 +81,9 @@ public class DealServiceImpl implements DealService {
 
     @Override
     public List<DealResponse> getAllDeals() {
+        State eliminatedState = stateService.getEliminatedState();
         return dealRepository.findAllWithRelations().stream()
+                .filter(deal -> deal.getState() != null && !deal.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -129,10 +131,13 @@ public class DealServiceImpl implements DealService {
 
     @Override
     public void deleteDeal(Long id) {
-        if (!dealRepository.existsById(id)) {
-            throw new EntityNotFoundException("Deal with ID " + id + " not found");
-        }
-        dealRepository.deleteById(id);
+        Deal deal = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        deal.setState(eliminatedState);
+        
+        dealRepository.save(deal);
     }
 
     private DealResponse mapToResponse(Deal deal) {

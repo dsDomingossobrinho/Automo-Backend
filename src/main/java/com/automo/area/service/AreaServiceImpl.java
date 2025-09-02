@@ -49,7 +49,11 @@ public class AreaServiceImpl implements AreaService {
 
     @Override
     public List<AreaResponse> getAllAreas() {
-        return areaRepository.findAllResponse();
+        State eliminatedState = stateService.getEliminatedState();
+        return areaRepository.findAll().stream()
+                .filter(area -> area.getState() != null && !area.getState().getId().equals(eliminatedState.getId()))
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Override
@@ -73,10 +77,13 @@ public class AreaServiceImpl implements AreaService {
 
     @Override
     public void deleteArea(Long id) {
-        if (!areaRepository.existsById(id)) {
-            throw new EntityNotFoundException("Area with ID " + id + " not found");
-        }
-        areaRepository.deleteById(id);
+        Area area = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        area.setState(eliminatedState);
+        
+        areaRepository.save(area);
     }
 
     private AreaResponse mapToResponse(Area area) {

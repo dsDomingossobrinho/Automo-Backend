@@ -58,7 +58,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public List<PaymentResponse> getAllPayments() {
+        State eliminatedState = stateService.getEliminatedState();
         return paymentRepository.findAll().stream()
+                .filter(payment -> payment.getState() != null && !payment.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -98,10 +100,13 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public void deletePayment(Long id) {
-        if (!paymentRepository.existsById(id)) {
-            throw new EntityNotFoundException("Payment with ID " + id + " not found");
-        }
-        paymentRepository.deleteById(id);
+        Payment payment = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        payment.setState(eliminatedState);
+        
+        paymentRepository.save(payment);
     }
 
     private PaymentResponse mapToResponse(Payment payment) {

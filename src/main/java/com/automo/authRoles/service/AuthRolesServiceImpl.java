@@ -62,7 +62,9 @@ public class AuthRolesServiceImpl implements AuthRolesService {
     @Override
     @Transactional(readOnly = true)
     public List<AuthRolesResponse> getAllAuthRoles() {
+        State eliminatedState = stateService.getEliminatedState();
         return authRolesRepository.findAll().stream()
+                .filter(authRole -> authRole.getState() != null && !authRole.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -98,10 +100,13 @@ public class AuthRolesServiceImpl implements AuthRolesService {
 
     @Override
     public void deleteAuthRoles(Long id) {
-        if (!authRolesRepository.existsById(id)) {
-            throw new EntityNotFoundException("AuthRoles with ID " + id + " not found");
-        }
-        authRolesRepository.deleteById(id);
+        AuthRoles authRoles = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        authRoles.setState(eliminatedState);
+        
+        authRolesRepository.save(authRoles);
     }
 
     @Override

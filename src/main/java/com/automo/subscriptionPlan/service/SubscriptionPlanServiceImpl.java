@@ -51,7 +51,9 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
 
     @Override
     public List<SubscriptionPlanResponse> getAllSubscriptionPlans() {
+        State eliminatedState = stateService.getEliminatedState();
         return subscriptionPlanRepository.findAll().stream()
+                .filter(plan -> plan.getState() != null && !plan.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -77,10 +79,13 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
 
     @Override
     public void deleteSubscriptionPlan(Long id) {
-        if (!subscriptionPlanRepository.existsById(id)) {
-            throw new EntityNotFoundException("SubscriptionPlan with ID " + id + " not found");
-        }
-        subscriptionPlanRepository.deleteById(id);
+        SubscriptionPlan subscriptionPlan = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        subscriptionPlan.setState(eliminatedState);
+        
+        subscriptionPlanRepository.save(subscriptionPlan);
     }
 
     private SubscriptionPlanResponse mapToResponse(SubscriptionPlan subscriptionPlan) {

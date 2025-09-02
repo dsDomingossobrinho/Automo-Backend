@@ -62,7 +62,9 @@ public class AssociatedEmailServiceImpl implements AssociatedEmailService {
     @Override
     @Transactional(readOnly = true)
     public List<AssociatedEmailResponse> getAllAssociatedEmails() {
+        State eliminatedState = stateService.getEliminatedState();
         return associatedEmailRepository.findAll().stream()
+                .filter(email -> email.getState() != null && !email.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -107,10 +109,13 @@ public class AssociatedEmailServiceImpl implements AssociatedEmailService {
 
     @Override
     public void deleteAssociatedEmail(Long id) {
-        if (!associatedEmailRepository.existsById(id)) {
-            throw new RuntimeException("AssociatedEmail not found");
-        }
-        associatedEmailRepository.deleteById(id);
+        AssociatedEmail associatedEmail = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        associatedEmail.setState(eliminatedState);
+        
+        associatedEmailRepository.save(associatedEmail);
     }
 
     private AssociatedEmailResponse mapToResponse(AssociatedEmail associatedEmail) {

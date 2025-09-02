@@ -93,4 +93,10 @@ public class StateServiceImpl implements StateService {
         // For State entity, return the entity regardless of stateId parameter
         return entity;
     }
+    
+    @Override
+    public State getEliminatedState() {
+        return stateRepository.findByState("ELIMINATED")
+                .orElseThrow(() -> new EntityNotFoundException("ELIMINATED state not found"));
+    }
 } 

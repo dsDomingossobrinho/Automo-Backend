@@ -11,20 +11,29 @@ import com.automo.user.service.UserService;
 import com.automo.state.entity.State;
 import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class IdentifierServiceImpl implements IdentifierService {
 
     private final IdentifierRepository identifierRepository;
     private final UserService userService;
     private final IdentifierTypeService identifierTypeService;
     private final StateService stateService;
+
+    public IdentifierServiceImpl(IdentifierRepository identifierRepository,
+                                 @Lazy UserService userService,
+                                 IdentifierTypeService identifierTypeService,
+                                 StateService stateService) {
+        this.identifierRepository = identifierRepository;
+        this.userService = userService;
+        this.identifierTypeService = identifierTypeService;
+        this.stateService = stateService;
+    }
 
     @Override
     public IdentifierResponse createIdentifier(IdentifierDto identifierDto) {
@@ -63,7 +72,9 @@ public class IdentifierServiceImpl implements IdentifierService {
 
     @Override
     public List<IdentifierResponse> getAllIdentifiers() {
+        State eliminatedState = stateService.getEliminatedState();
         return identifierRepository.findAll().stream()
+                .filter(identifier -> identifier.getState() != null && !identifier.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -103,10 +114,13 @@ public class IdentifierServiceImpl implements IdentifierService {
 
     @Override
     public void deleteIdentifier(Long id) {
-        if (!identifierRepository.existsById(id)) {
-            throw new EntityNotFoundException("Identifier with ID " + id + " not found");
-        }
-        identifierRepository.deleteById(id);
+        Identifier identifier = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        identifier.setState(eliminatedState);
+        
+        identifierRepository.save(identifier);
     }
 
     @Override

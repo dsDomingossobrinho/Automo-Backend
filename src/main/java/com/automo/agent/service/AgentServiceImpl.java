@@ -8,19 +8,26 @@ import com.automo.agentAreas.service.AgentAreasService;
 import com.automo.state.entity.State;
 import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class AgentServiceImpl implements AgentService {
 
     private final AgentRepository agentRepository;
     private final StateService stateService;
     private final AgentAreasService agentAreasService;
+
+    public AgentServiceImpl(AgentRepository agentRepository,
+                            StateService stateService,
+                            @Lazy AgentAreasService agentAreasService) {
+        this.agentRepository = agentRepository;
+        this.stateService = stateService;
+        this.agentAreasService = agentAreasService;
+    }
 
     @Override
     public AgentResponse createAgent(AgentDto agentDto) {
@@ -57,7 +64,9 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     public List<AgentResponse> getAllAgents() {
+        State eliminatedState = stateService.getEliminatedState();
         return agentRepository.findAllWithState().stream()
+                .filter(agent -> agent.getState() != null && !agent.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -84,27 +93,37 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     public List<AgentResponse> getAgentsByArea(Long areaId) {
+        State eliminatedState = stateService.getEliminatedState();
         return agentAreasService.getAgentAreasByArea(areaId).stream()
                 .map(agentAreaResponse -> {
                     Agent agent = this.findById(agentAreaResponse.agentId());
                     return mapToResponse(agent);
+                })
+                .filter(agentResponse -> {
+                    Agent agent = this.findById(agentResponse.id());
+                    return agent.getState() != null && !agent.getState().getId().equals(eliminatedState.getId());
                 })
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<AgentResponse> searchAgentsByName(String name) {
+        State eliminatedState = stateService.getEliminatedState();
         return agentRepository.findByNameContainingIgnoreCaseWithState(name).stream()
+                .filter(agent -> agent.getState() != null && !agent.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public void deleteAgent(Long id) {
-        if (!agentRepository.existsById(id)) {
-            throw new EntityNotFoundException("Agent with ID " + id + " not found");
-        }
-        agentRepository.deleteById(id);
+        Agent agent = this.getAgentById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        agent.setState(eliminatedState);
+        
+        agentRepository.save(agent);
     }
 
     private AgentResponse mapToResponse(Agent agent) {

@@ -62,7 +62,9 @@ public class LeadServiceImpl implements LeadService {
 
     @Override
     public List<LeadResponse> getAllLeads() {
+        State eliminatedState = stateService.getEliminatedState();
         return leadRepository.findAll().stream()
+                .filter(lead -> lead.getState() != null && !lead.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -88,24 +90,31 @@ public class LeadServiceImpl implements LeadService {
 
     @Override
     public List<LeadResponse> getLeadsByLeadType(Long leadTypeId) {
+        State eliminatedState = stateService.getEliminatedState();
         return leadRepository.findByLeadTypeId(leadTypeId).stream()
+                .filter(lead -> lead.getState() != null && !lead.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .toList();
     }
 
     @Override
     public List<LeadResponse> getLeadsByIdentifier(Long identifierId) {
+        State eliminatedState = stateService.getEliminatedState();
         return leadRepository.findByIdentifierId(identifierId).stream()
+                .filter(lead -> lead.getState() != null && !lead.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .toList();
     }
 
     @Override
     public void deleteLead(Long id) {
-        if (!leadRepository.existsById(id)) {
-            throw new EntityNotFoundException("Lead with ID " + id + " not found");
-        }
-        leadRepository.deleteById(id);
+        Lead lead = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        lead.setState(eliminatedState);
+        
+        leadRepository.save(lead);
     }
 
     private LeadResponse mapToResponse(Lead lead) {

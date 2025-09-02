@@ -142,7 +142,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public List<SubscriptionResponse> getAllSubscriptions() {
+        State eliminatedState = stateService.getEliminatedState();
         return subscriptionRepository.findAll().stream()
+                .filter(subscription -> subscription.getState() != null && !subscription.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -203,10 +205,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public void deleteSubscription(Long id) {
-        if (!subscriptionRepository.existsById(id)) {
-            throw new EntityNotFoundException("Subscription with ID " + id + " not found");
-        }
-        subscriptionRepository.deleteById(id);
+        Subscription subscription = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        subscription.setState(eliminatedState);
+        
+        subscriptionRepository.save(subscription);
     }
 
     private SubscriptionResponse mapToResponse(Subscription subscription) {

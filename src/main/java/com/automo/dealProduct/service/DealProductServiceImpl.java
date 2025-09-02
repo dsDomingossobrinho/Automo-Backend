@@ -63,7 +63,9 @@ public class DealProductServiceImpl implements DealProductService {
 
     @Override
     public List<DealProductResponse> getAllDealProducts() {
+        State eliminatedState = stateService.getEliminatedState();
         return dealProductRepository.findAll().stream()
+                .filter(dealProduct -> dealProduct.getState() != null && !dealProduct.getState().getId().equals(eliminatedState.getId()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -103,10 +105,13 @@ public class DealProductServiceImpl implements DealProductService {
 
     @Override
     public void deleteDealProduct(Long id) {
-        if (!dealProductRepository.existsById(id)) {
-            throw new EntityNotFoundException("DealProduct with ID " + id + " not found");
-        }
-        dealProductRepository.deleteById(id);
+        DealProduct dealProduct = this.findById(id);
+        
+        // Set state to ELIMINATED for soft delete
+        State eliminatedState = stateService.getEliminatedState();
+        dealProduct.setState(eliminatedState);
+        
+        dealProductRepository.save(dealProduct);
     }
 
     private DealProductResponse mapToResponse(DealProduct dealProduct) {
