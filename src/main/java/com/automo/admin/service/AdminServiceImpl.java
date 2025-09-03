@@ -5,13 +5,7 @@ import com.automo.admin.entity.Admin;
 import com.automo.admin.repository.AdminRepository;
 import com.automo.admin.response.AdminResponse;
 import com.automo.auth.entity.Auth;
-import com.automo.auth.repository.AuthRepository;
-import com.automo.accountType.service.AccountTypeService;
-import com.automo.identifier.service.IdentifierService;
-import com.automo.auth.service.AuthService;
-import com.automo.authRoles.service.AuthRolesService;
-import com.automo.role.service.RoleService;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.automo.auth.service.AuthEntityCreationService;
 import com.automo.model.dto.PaginationRequest;
 import com.automo.model.service.BaseServiceImpl;
 import com.automo.state.entity.State;
@@ -20,45 +14,30 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class AdminServiceImpl extends BaseServiceImpl<Admin, AdminResponse, Long> implements AdminService {
 
     private final AdminRepository adminRepository;
-    private final AuthRepository authRepository;
     private final StateService stateService;
-    private final AccountTypeService accountTypeService;
-    private final PasswordEncoder passwordEncoder;
-    private final AuthService authService;
-    private final IdentifierService identifierService;
-    private final AuthRolesService authRolesService;
-    private final RoleService roleService;
+    private final AuthEntityCreationService authEntityCreationService;
 
     public AdminServiceImpl(AdminRepository adminRepository,
-                           AuthRepository authRepository,
                            StateService stateService,
-                           AccountTypeService accountTypeService,
-                           PasswordEncoder passwordEncoder,
-                           AuthService authService,
-                           IdentifierService identifierService,
-                           AuthRolesService authRolesService,
-                           RoleService roleService) {
+                           AuthEntityCreationService authEntityCreationService) {
         super(adminRepository);
         this.adminRepository = adminRepository;
-        this.authRepository = authRepository;
         this.stateService = stateService;
-        this.accountTypeService = accountTypeService;
-        this.passwordEncoder = passwordEncoder;
-        this.authService = authService;
-        this.identifierService = identifierService;
-        this.authRolesService = authRolesService;
-        this.roleService = roleService;
+        this.authEntityCreationService = authEntityCreationService;
     }
 
     @Override
+    @Transactional
     public AdminResponse createAdmin(AdminDto adminDto) {
         // 1. PRIMEIRO: Criar o Admin (entidade principal)
         State state = stateService.findById(adminDto.stateId());
@@ -68,43 +47,30 @@ public class AdminServiceImpl extends BaseServiceImpl<Admin, AdminResponse, Long
         admin.setName(adminDto.name());
         admin.setImg(adminDto.img());
         admin.setState(state);
-        // Não definir auth ainda - será definido após criação do Auth
         
         Admin savedAdmin = adminRepository.save(admin);
         
-        // 2. SEGUNDO: Criar o Auth (periférico) com username gerado automaticamente
-        String uniqueUsername = authService.generateUniqueUsername(adminDto.name());
-        
-        Auth auth = new Auth();
-        auth.setEmail(adminDto.email());
-        auth.setUsername(uniqueUsername);
-        auth.setPassword(passwordEncoder.encode(adminDto.password()));
-        auth.setContact(adminDto.contact());
-        auth.setAccountType(accountTypeService.findById(adminDto.accountTypeId()));
-        auth.setState(state);
-        
-        Auth savedAuth = authRepository.save(auth);
+        // 2. SEGUNDO: Criar Auth completo usando AuthEntityCreationService
+        Auth savedAuth = authEntityCreationService.createAuthForEntity(
+                adminDto.email(),
+                adminDto.name(),
+                adminDto.password(),
+                adminDto.contact(),
+                adminDto.accountTypeId(),
+                state,
+                "ADMIN",
+                "ADMIN"
+        );
         
         // 3. TERCEIRO: Atualizar o Admin com a referência do Auth criado
         savedAdmin.setAuth(savedAuth);
         savedAdmin = adminRepository.save(savedAdmin);
         
-        // 4. QUARTO: Criar os Identifiers
-        identifierService.createIdentifierForEntity(savedAuth.getId(), "ADMIN", state.getId());
-        
-        // 5. QUINTO: Atribuir role ADMIN ao administrador criado
-        try {
-            com.automo.role.entity.Role adminRole = roleService.findByRole("ADMIN");
-            authRolesService.createAuthRolesWithEntities(savedAuth, adminRole, state);
-        } catch (Exception e) {
-            // Se não existir role ADMIN, criar um admin sem role por enquanto
-            // Pode-se implementar criação automática da role ADMIN aqui se necessário
-        }
-        
         return mapToResponse(savedAdmin);
     }
 
     @Override
+    @Transactional
     public AdminResponse updateAdmin(Long id, AdminDto adminDto) {
         Admin admin = this.getAdminById(id);
         State state = stateService.findById(adminDto.stateId());
@@ -115,18 +81,17 @@ public class AdminServiceImpl extends BaseServiceImpl<Admin, AdminResponse, Long
         admin.setImg(adminDto.img());
         admin.setState(state);
         
-        // Atualizar dados do Auth associado
+        // Atualizar dados do Auth associado usando AuthEntityCreationService
         Auth auth = admin.getAuth();
         if (auth != null) {
-            auth.setEmail(adminDto.email());
-            // Username não é alterado durante update - mantém o original
-            if (adminDto.password() != null && !adminDto.password().isEmpty()) {
-                auth.setPassword(passwordEncoder.encode(adminDto.password()));
-            }
-            auth.setContact(adminDto.contact());
-            auth.setAccountType(accountTypeService.findById(adminDto.accountTypeId()));
-            auth.setState(state);
-            authRepository.save(auth);
+            authEntityCreationService.updateAuthForEntity(
+                    auth,
+                    adminDto.email(),
+                    adminDto.password(),
+                    adminDto.contact(),
+                    adminDto.accountTypeId(),
+                    state
+            );
         }
         
         Admin updatedAdmin = adminRepository.save(admin);

@@ -2,12 +2,14 @@ package com.automo.model.service;
 
 import com.automo.model.dto.PaginationRequest;
 import com.automo.model.dto.PaginatedResponse;
+import com.automo.model.exception.EntityNotActiveException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
 
@@ -76,7 +78,7 @@ public abstract class BaseServiceImpl<T, R, ID> implements BaseService<T, R, ID>
         T entity = getEntityById(id);
         
         if (!isEntityActive(id)) {
-            throw new RuntimeException("Entity with ID " + id + " is not active");
+            throw new EntityNotActiveException("Entity with ID " + id + " is not active");
         }
         
         return entity;
@@ -111,7 +113,7 @@ public abstract class BaseServiceImpl<T, R, ID> implements BaseService<T, R, ID>
     public T getEntityById(ID id) {
         log.info("Buscando entidade por ID (sem verificar estado): {}", id);
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Entity with ID " + id + " not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Entity with ID " + id + " not found"));
     }
 
     @Override

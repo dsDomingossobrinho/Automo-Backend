@@ -4,20 +4,32 @@ import com.automo.state.dto.StateDto;
 import com.automo.state.entity.State;
 import com.automo.state.repository.StateRepository;
 import com.automo.state.response.StateResponse;
+import com.automo.model.service.BaseServiceImpl;
+import com.automo.model.dto.PaginationRequest;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
-public class StateServiceImpl implements StateService {
+@Slf4j
+@Transactional(readOnly = true)
+public class StateServiceImpl extends BaseServiceImpl<State, StateResponse, Long> implements StateService {
 
     private final StateRepository stateRepository;
+    
+    public StateServiceImpl(StateRepository stateRepository) {
+        super(stateRepository);
+        this.stateRepository = stateRepository;
+    }
 
     @Override
+    @Transactional
     public StateResponse createState(StateDto stateDto) {
         State state = new State();
         state.setState(stateDto.state());
@@ -28,6 +40,7 @@ public class StateServiceImpl implements StateService {
     }
 
     @Override
+    @Transactional
     public StateResponse updateState(Long id, StateDto stateDto) {
         State state = this.getStateById(id);
         
@@ -64,20 +77,12 @@ public class StateServiceImpl implements StateService {
     }
 
     @Override
+    @Transactional
     public void deleteState(Long id) {
         State state = this.getStateById(id);
         stateRepository.delete(state);
     }
 
-    private StateResponse mapToResponse(State state) {
-        return new StateResponse(
-                state.getId(),
-                state.getState(),
-                state.getDescription(),
-                state.getCreatedAt(),
-                state.getUpdatedAt()
-        );
-    }
     
     @Override
     public State findById(Long id) {
@@ -98,5 +103,78 @@ public class StateServiceImpl implements StateService {
     public State getEliminatedState() {
         return stateRepository.findByState("ELIMINATED")
                 .orElseThrow(() -> new EntityNotFoundException("ELIMINATED state not found"));
+    }
+
+    // Implementações dos métodos abstratos do BaseServiceImpl
+    @Override
+    protected Page<State> getEntitiesPage(PaginationRequest request, Pageable pageable) {
+        if (request.search() == null || request.search().trim().isEmpty()) {
+            return stateRepository.findAll(pageable);
+        }
+        return stateRepository.findByStateContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+                request.search().trim(), request.search().trim(), pageable);
+    }
+
+    @Override
+    protected Page<State> getActiveEntitiesPage(PaginationRequest request, Pageable pageable) {
+        // Para States, todos são considerados "ativos" pois não têm estado próprio
+        return getEntitiesPage(request, pageable);
+    }
+
+    @Override
+    protected Page<State> getEntitiesByStatePage(Long stateId, PaginationRequest request, Pageable pageable) {
+        // Para States, não aplicável pois não têm estado, mas retorna todos para compatibilidade
+        return getEntitiesPage(request, pageable);
+    }
+
+    @Override
+    protected List<State> getActiveEntitiesList() {
+        return stateRepository.findAll();
+    }
+
+    @Override
+    protected List<State> getEntitiesByStateList(Long stateId) {
+        return stateRepository.findAll();
+    }
+
+    @Override
+    protected void deactivateEntityInternal(State entity) {
+        // Para States, não há desativação real pois não têm estado próprio
+        log.warn("Tentativa de desativar State ID: {}. States não possuem estado próprio para desativação.", entity.getId());
+        throw new UnsupportedOperationException("States não suportam desativação pois não possuem estado próprio");
+    }
+
+    @Override
+    protected boolean isEntityActiveInternal(State entity) {
+        // Para States, todos são considerados "ativos" pois não têm estado próprio
+        return true;
+    }
+
+    @Override
+    protected long countActiveEntitiesInternal() {
+        return stateRepository.count();
+    }
+
+    @Override
+    protected long countEntitiesByStateInternal(Long stateId) {
+        // Para States, não aplicável, mas retorna count total para compatibilidade
+        return stateRepository.count();
+    }
+
+    @Override
+    protected void validateStateExists(Long stateId) {
+        // Para States, não aplicável pois não têm estado próprio
+        log.debug("Validação de estado não aplicável para States. StateId: {}", stateId);
+    }
+
+    @Override
+    public StateResponse mapToResponse(State state) {
+        return new StateResponse(
+                state.getId(),
+                state.getState(),
+                state.getDescription(),
+                state.getCreatedAt(),
+                state.getUpdatedAt()
+        );
     }
 } 

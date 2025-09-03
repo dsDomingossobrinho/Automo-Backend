@@ -5,67 +5,46 @@ import com.automo.user.entity.User;
 import com.automo.user.repository.UserRepository;
 import com.automo.user.response.UserResponse;
 import com.automo.auth.entity.Auth;
-import com.automo.auth.repository.AuthRepository;
 import com.automo.state.entity.State;
 import com.automo.state.service.StateService;
-import com.automo.accountType.service.AccountTypeService;
 import com.automo.country.service.CountryService;
 import com.automo.organizationType.service.OrganizationTypeService;
 import com.automo.province.service.ProvinceService;
-import com.automo.identifier.service.IdentifierService;
-import com.automo.auth.service.AuthService;
-import com.automo.authRoles.service.AuthRolesService;
-import com.automo.role.service.RoleService;
+import com.automo.auth.service.AuthEntityCreationService;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final AuthRepository authRepository;
     private final StateService stateService;
-    private final AccountTypeService accountTypeService;
     private final CountryService countryService;
     private final OrganizationTypeService organizationTypeService;
     private final ProvinceService provinceService;
-    private final PasswordEncoder passwordEncoder;
-    private final AuthService authService;
-    private final IdentifierService identifierService;
-    private final AuthRolesService authRolesService;
-    private final RoleService roleService;
+    private final AuthEntityCreationService authEntityCreationService;
 
     public UserServiceImpl(UserRepository userRepository,
-                          AuthRepository authRepository,
                           StateService stateService,
-                          AccountTypeService accountTypeService,
                           CountryService countryService,
                           OrganizationTypeService organizationTypeService,
                           ProvinceService provinceService,
-                          PasswordEncoder passwordEncoder,
-                          AuthService authService,
-                          IdentifierService identifierService,
-                          AuthRolesService authRolesService,
-                          RoleService roleService) {
+                          AuthEntityCreationService authEntityCreationService) {
         this.userRepository = userRepository;
-        this.authRepository = authRepository;
         this.stateService = stateService;
-        this.accountTypeService = accountTypeService;
         this.countryService = countryService;
         this.organizationTypeService = organizationTypeService;
         this.provinceService = provinceService;
-        this.passwordEncoder = passwordEncoder;
-        this.authService = authService;
-        this.identifierService = identifierService;
-        this.authRolesService = authRolesService;
-        this.roleService = roleService;
+        this.authEntityCreationService = authEntityCreationService;
     }
 
     @Override
+    @Transactional
     public UserResponse createUser(UserDto userDto) {
         // 1. PRIMEIRO: Criar o User (entidade principal)
         State state = stateService.findById(userDto.stateId());
@@ -81,43 +60,30 @@ public class UserServiceImpl implements UserService {
             user.setProvince(provinceService.findById(userDto.provinceId()));
         }
         user.setState(state);
-        // Não definir auth ainda - será definido após criação do Auth
         
         User savedUser = userRepository.save(user);
         
-        // 2. SEGUNDO: Criar o Auth (periférico) com username gerado automaticamente
-        String uniqueUsername = authService.generateUniqueUsername(userDto.name());
-        
-        Auth auth = new Auth();
-        auth.setEmail(userDto.email());
-        auth.setUsername(uniqueUsername);
-        auth.setPassword(passwordEncoder.encode(userDto.password()));
-        auth.setContact(userDto.contacto());
-        auth.setAccountType(accountTypeService.findById(userDto.accountTypeId()));
-        auth.setState(state);
-        
-        Auth savedAuth = authRepository.save(auth);
+        // 2. SEGUNDO: Criar Auth completo usando AuthEntityCreationService
+        Auth savedAuth = authEntityCreationService.createAuthForEntity(
+                userDto.email(),
+                userDto.name(), 
+                userDto.password(),
+                userDto.contacto(),
+                userDto.accountTypeId(),
+                state,
+                "USER",
+                "USER"
+        );
         
         // 3. TERCEIRO: Atualizar o User com a referência do Auth criado
         savedUser.setAuth(savedAuth);
         savedUser = userRepository.save(savedUser);
         
-        // 4. QUARTO: Criar os Identifiers
-        identifierService.createIdentifierForEntity(savedAuth.getId(), "USER", state.getId());
-        
-        // 5. QUINTO: Atribuir role USER ao usuário criado
-        try {
-            com.automo.role.entity.Role userRole = roleService.findByRole("USER");
-            authRolesService.createAuthRolesWithEntities(savedAuth, userRole, state);
-        } catch (Exception e) {
-            // Se não existir role USER, criar um usuário sem role por enquanto
-            // Pode-se implementar criação automática da role USER aqui se necessário
-        }
-        
         return mapToResponse(savedUser);
     }
 
     @Override
+    @Transactional
     public UserResponse updateUser(Long id, UserDto userDto) {
         User user = this.getUserById(id);
         State state = stateService.findById(userDto.stateId());
@@ -134,18 +100,17 @@ public class UserServiceImpl implements UserService {
         }
         user.setState(state);
         
-        // Atualizar dados do Auth associado
+        // Atualizar dados do Auth associado usando AuthEntityCreationService
         Auth auth = user.getAuth();
         if (auth != null) {
-            auth.setEmail(userDto.email());
-            // Username não é alterado durante update - mantém o original
-            if (userDto.password() != null && !userDto.password().isEmpty()) {
-                auth.setPassword(passwordEncoder.encode(userDto.password()));
-            }
-            auth.setContact(userDto.contacto());
-            auth.setAccountType(accountTypeService.findById(userDto.accountTypeId()));
-            auth.setState(state);
-            authRepository.save(auth);
+            authEntityCreationService.updateAuthForEntity(
+                    auth,
+                    userDto.email(),
+                    userDto.password(),
+                    userDto.contacto(),
+                    userDto.accountTypeId(),
+                    state
+            );
         }
         
         User updatedUser = userRepository.save(user);
@@ -188,6 +153,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(Long id) {
         User user = this.findById(id);
         

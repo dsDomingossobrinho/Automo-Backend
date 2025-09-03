@@ -71,4 +71,9 @@ public interface AuthService {
      * Gera um username único e válido baseado no nome fornecido
      */
     String generateUniqueUsername(String name);
+    
+    /**
+     * Salva ou atualiza uma entidade Auth - método obrigatório para comunicação entre services
+     */
+    Auth save(Auth auth);
 } 

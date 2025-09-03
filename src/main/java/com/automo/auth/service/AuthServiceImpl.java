@@ -19,10 +19,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class AuthServiceImpl implements AuthService {
 
     private final AuthRepository authRepository;
@@ -281,5 +283,13 @@ public class AuthServiceImpl implements AuthService {
         }
         
         return finalUsername;
+    }
+    
+    @Override
+    public Auth save(Auth auth) {
+        log.info("Salvando entidade Auth ID: {}", auth.getId());
+        Auth savedAuth = authRepository.save(auth);
+        log.debug("Auth salvo com sucesso. ID: {}, Email: {}", savedAuth.getId(), savedAuth.getEmail());
+        return savedAuth;
     }
 } 
