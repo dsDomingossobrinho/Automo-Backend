@@ -53,6 +53,8 @@ public class SecurityConfig {
                 
                 // 2. Rotas de autenticação públicas
                 .requestMatchers("/auth/login").permitAll()                      // Login direto
+                .requestMatchers("/auth/login/backoffice").permitAll()           // Login backoffice direto
+                .requestMatchers("/auth/login/user").permitAll()                 // Login usuário direto
                 .requestMatchers("/auth/login/request-otp").permitAll()          // Solicitar OTP
                 .requestMatchers("/auth/login/verify-otp").permitAll()           // Verificar OTP
                 .requestMatchers("/auth/login/backoffice/request-otp").permitAll() // OTP backoffice
@@ -92,6 +94,9 @@ public class SecurityConfig {
                 // 4. Health checks e métricas (monitoramento)
                 .requestMatchers("/actuator/health/**").permitAll()              // Status de saúde
                 .requestMatchers("/actuator/info").permitAll()                   // Informações da aplicação
+                
+                // 5. Endpoint de teste de email (público)
+                .requestMatchers("/test/email").permitAll()                      // Teste de configuração de email
                 
                 // ========================================
                 // ROTAS PROTEGIDAS (COM AUTENTICAÇÃO)

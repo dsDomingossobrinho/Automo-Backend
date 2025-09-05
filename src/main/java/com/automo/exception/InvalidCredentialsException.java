@@ -13,7 +13,7 @@ public class InvalidCredentialsException extends AutomoException {
     }
     
     public static InvalidCredentialsException create() {
-        return new InvalidCredentialsException("Invalid email/contact or password");
+        return new InvalidCredentialsException("Email ou senha incorretos. Verifique suas credenciais e tente novamente.");
     }
     
     public static InvalidCredentialsException invalidPassword() {
@@ -21,6 +21,10 @@ public class InvalidCredentialsException extends AutomoException {
     }
     
     public static InvalidCredentialsException expiredToken() {
-        return new InvalidCredentialsException("Token has expired");
+        return new InvalidCredentialsException("Código OTP inválido ou expirado. Solicite um novo código.");
+    }
+    
+    public static InvalidCredentialsException invalidOtp() {
+        return new InvalidCredentialsException("Código OTP incorreto. Verifique o código e tente novamente.");
     }
 }

@@ -186,4 +186,19 @@ public class AuthRolesServiceImpl implements AuthRolesService {
 
         authRolesRepository.save(authRoles);
     }
+    
+    @Override
+    public List<AuthRoles> findByAuthId(Long authId) {
+        return authRolesRepository.findByAuthId(authId);
+    }
+    
+    @Override
+    public AuthRoles save(AuthRoles authRoles) {
+        return authRolesRepository.save(authRoles);
+    }
+    
+    @Override
+    public void delete(AuthRoles authRoles) {
+        authRolesRepository.delete(authRoles);
+    }
 } 

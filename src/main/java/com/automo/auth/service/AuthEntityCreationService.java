@@ -6,8 +6,8 @@ import com.automo.state.entity.State;
 import com.automo.identifier.service.IdentifierService;
 import com.automo.authRoles.service.AuthRolesService;
 import com.automo.role.service.RoleService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class AuthEntityCreationService {
 
     private final AuthService authService;
@@ -27,6 +26,20 @@ public class AuthEntityCreationService {
     private final IdentifierService identifierService;
     private final AuthRolesService authRolesService;
     private final RoleService roleService;
+
+    public AuthEntityCreationService(@Lazy AuthService authService,
+                                    AccountTypeService accountTypeService,
+                                    PasswordEncoder passwordEncoder,
+                                    IdentifierService identifierService,
+                                    AuthRolesService authRolesService,
+                                    RoleService roleService) {
+        this.authService = authService;
+        this.accountTypeService = accountTypeService;
+        this.passwordEncoder = passwordEncoder;
+        this.identifierService = identifierService;
+        this.authRolesService = authRolesService;
+        this.roleService = roleService;
+    }
 
     /**
      * Cria uma entidade Auth completa com username único, identifiers e roles

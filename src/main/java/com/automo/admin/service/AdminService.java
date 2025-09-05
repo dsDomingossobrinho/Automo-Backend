@@ -48,4 +48,9 @@ public interface AdminService extends BaseService<Admin, AdminResponse, Long> {
      * Deleta um admin
      */
     void deleteAdmin(Long id);
+    
+    /**
+     * Verifica se existe admin ativo por Auth ID
+     */
+    boolean isActiveAdminByAuthId(Long authId);
 } 

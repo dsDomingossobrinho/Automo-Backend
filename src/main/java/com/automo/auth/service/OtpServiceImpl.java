@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Random;
@@ -26,6 +27,7 @@ public class OtpServiceImpl implements OtpService {
     private static final int OTP_EXPIRY_MINUTES = 5;
 
     @Override
+    @Transactional
     public String generateAndSendOtp(String contact, String purpose) {
         // Detectar tipo de contato
         ContactValidator.ContactType contactType = ContactValidator.getContactType(contact);
@@ -67,6 +69,7 @@ public class OtpServiceImpl implements OtpService {
     }
 
     @Override
+    @Transactional
     public boolean verifyOtp(String contact, String otpCode, String purpose) {
         LocalDateTime now = LocalDateTime.now();
         
@@ -87,6 +90,7 @@ public class OtpServiceImpl implements OtpService {
     }
 
     @Override
+    @Transactional
     @Scheduled(fixedRate = 300000) // Executar a cada 5 minutos
     public void cleanupExpiredOtps() {
         LocalDateTime now = LocalDateTime.now();

@@ -99,11 +99,100 @@ O sistema agora suporta **múltiplas roles por usuário** através de uma relaç
 
 ### Endpoints de Autenticação
 
-- **`POST /auth/login`**: Autenticação geral
-- **`POST /auth/login/backoffice`**: Autenticação apenas para Back Office
-- **`POST /auth/login/user`**: Autenticação apenas para usuários corporativos
+#### **Login Direto**
+- **`POST /auth/login`**: Autenticação direta com email/username/contato e senha
+
+#### **Login com OTP**
+- **`POST /auth/login/request-otp`**: Solicitar código OTP para autenticação geral
+- **`POST /auth/login/verify-otp`**: Verificar código OTP e autenticar
+- **`POST /auth/login/resend-otp`**: Reenviar código OTP para autenticação geral
+
+#### **Login Back Office com OTP**
+- **`POST /auth/login/backoffice/request-otp`**: Solicitar código OTP para Back Office
+- **`POST /auth/login/backoffice/verify-otp`**: Verificar OTP e autenticar Back Office
+- **`POST /auth/login/backoffice/resend-otp`**: Reenviar código OTP para Back Office
+
+#### **Login Usuário Corporativo com OTP**
+- **`POST /auth/login/user/request-otp`**: Solicitar código OTP para usuários corporativos
+- **`POST /auth/login/user/verify-otp`**: Verificar OTP e autenticar usuário corporativo
+- **`POST /auth/login/user/resend-otp`**: Reenviar código OTP para usuários corporativos
+
+#### **Recuperação de Senha**
+- **`POST /auth/forgot-password`**: Solicitar código OTP para recuperação de senha
+- **`POST /auth/reset-password`**: Verificar OTP e alterar senha
+
+#### **Outros**
 - **`POST /auth/register`**: Registro de usuários
 - **`GET /auth/me`**: Informações do usuário atual (requer autenticação)
+
+## 🔐 Sistema OTP (One-Time Password)
+
+### Características do Sistema OTP
+
+- **Detecção Automática**: O sistema detecta automaticamente se o contato fornecido é email ou telefone
+- **Envio por Email**: Códigos OTP são enviados via Gmail SMTP para emails
+- **Envio por SMS**: Configurado para envio por SMS (atualmente desabilitado)
+- **Múltiplos Contextos**: Suporte para diferentes tipos de OTP (LOGIN, LOGIN_BACKOFFICE, LOGIN_USER, PASSWORD_RESET)
+- **Expiração**: Códigos OTP possuem tempo de expiração configurável
+- **Reenvio**: Funcionalidade de reenvio de código OTP
+
+### Como Funciona
+
+1. **Solicitação de OTP**: Usuário fornece email/contato e senha
+2. **Validação**: Sistema valida credenciais e tipo de conta
+3. **Geração**: Código OTP é gerado e enviado por email ou SMS
+4. **Verificação**: Usuário insere código OTP para completar autenticação
+5. **Token JWT**: Sistema retorna token JWT válido após verificação
+
+### Exemplos de Uso
+
+#### 1. Solicitar OTP para Login Geral
+```bash
+curl -X POST http://localhost:8080/auth/login/request-otp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "emailOrContact": "user@example.com",
+    "password": "senha123"
+  }'
+```
+
+#### 2. Verificar OTP e Fazer Login
+```bash
+curl -X POST http://localhost:8080/auth/login/verify-otp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contact": "user@example.com",
+    "otpCode": "123456"
+  }'
+```
+
+#### 3. Reenviar OTP
+```bash
+curl -X POST http://localhost:8080/auth/login/resend-otp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "emailOrContact": "user@example.com"
+  }'
+```
+
+#### 4. Recuperação de Senha
+```bash
+# Solicitar código de recuperação
+curl -X POST http://localhost:8080/auth/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{
+    "emailOrContact": "user@example.com"
+  }'
+
+# Alterar senha com código OTP
+curl -X POST http://localhost:8080/auth/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{
+    "emailOrContact": "user@example.com",
+    "otpCode": "123456",
+    "newPassword": "novaSenha123"
+  }'
+```
 
 ## 🛠️ Como Usar o JWT Utils
 
@@ -308,9 +397,33 @@ application.security.jwt.refresh-token.expiration=604800000
 ```properties
 # Database Configuration
 spring.datasource.url=jdbc:postgresql://localhost:5432/automo_db
-spring.datasource.username=postgres
-spring.datasource.password=password
+spring.datasource.username=automo
+spring.datasource.password=automo123
 spring.jpa.hibernate.ddl-auto=update
+```
+
+### Configuração de Email (OTP)
+
+```properties
+# Email Configuration for OTP
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=seu-email@gmail.com
+spring.mail.password=sua-senha-app-gmail
+spring.mail.properties.mail.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# Admin Configuration
+admin.email=admin@automo.com
+admin.default.password=admin123
+```
+
+### Configuração de SMS (Opcional)
+
+```properties
+# SMS Configuration (currently disabled)
+sms.enabled=false
+sms.api.key=your-sms-api-key
 ```
 
 ## 🚀 Execução

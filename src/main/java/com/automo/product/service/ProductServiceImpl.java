@@ -1,5 +1,6 @@
 package com.automo.product.service;
 
+import com.automo.payment.service.FileStorageService;
 import com.automo.product.dto.ProductDto;
 import com.automo.product.entity.Product;
 import com.automo.product.repository.ProductRepository;
@@ -9,6 +10,7 @@ import com.automo.state.service.StateService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,6 +21,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final StateService stateService;
+    private final FileStorageService fileStorageService;
 
     @Override
     public ProductResponse createProduct(ProductDto productDto) {
@@ -83,11 +86,35 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(Long id) {
         Product product = this.findById(id);
         
+        // Delete image file if exists
+        if (product.getImg() != null && !product.getImg().trim().isEmpty()) {
+            fileStorageService.deleteProductImage(product.getImg());
+        }
+        
         // Set state to ELIMINATED for soft delete
         State eliminatedState = stateService.getEliminatedState();
         product.setState(eliminatedState);
         
         productRepository.save(product);
+    }
+
+    @Override
+    public ProductResponse uploadProductImage(Long productId, MultipartFile imageFile) {
+        Product product = this.findById(productId);
+        
+        // Delete old image if exists
+        if (product.getImg() != null && !product.getImg().trim().isEmpty()) {
+            fileStorageService.deleteProductImage(product.getImg());
+        }
+        
+        // Store new image
+        String filename = fileStorageService.storeProductImage(imageFile);
+        
+        // Update product with new image filename
+        product.setImg(filename);
+        Product updatedProduct = productRepository.save(product);
+        
+        return mapToResponse(updatedProduct);
     }
 
     private ProductResponse mapToResponse(Product product) {

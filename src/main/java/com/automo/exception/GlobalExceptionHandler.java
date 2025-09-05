@@ -73,9 +73,16 @@ public class GlobalExceptionHandler {
         
         log.warn("Authentication failed for request {}: {}", request.getRequestURI(), ex.getMessage());
         
+        // Mensagem mais clara baseada no contexto da requisição
+        String message = "Email ou senha incorretos. Verifique suas credenciais e tente novamente.";
+        
+        if (request.getRequestURI().contains("request-otp")) {
+            message = "Email ou senha incorretos. Não foi possível gerar o código OTP.";
+        }
+        
         ApiErrorResponse error = new ApiErrorResponse(
-                "AUTHENTICATION_FAILED",
-                "Authentication failed",
+                "INVALID_CREDENTIALS",
+                message,
                 HttpStatus.UNAUTHORIZED.value(),
                 request.getRequestURI()
         );

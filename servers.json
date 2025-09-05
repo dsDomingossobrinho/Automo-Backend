@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Automo Database",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "automo_db",
+      "Username": "automo",
+      "SSLMode": "prefer",
+      "Shared": false
+    }
+  }
+}

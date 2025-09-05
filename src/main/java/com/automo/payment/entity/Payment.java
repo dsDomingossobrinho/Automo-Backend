@@ -1,5 +1,6 @@
 package com.automo.payment.entity;
 
+import com.automo.identifier.entity.Identifier;
 import com.automo.model.AbstractModel;
 import com.automo.paymentType.entity.PaymentType;
 import com.automo.state.entity.State;
@@ -23,9 +24,10 @@ public class Payment extends AbstractModel {
     @NotBlank(message = "Document is required")
     private String document;
     
-    @Column(nullable = false)
-    @NotBlank(message = "Identifier is required")
-    private String identifier;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "identifier_id", nullable = false)
+    @NotNull(message = "Identifier is required")
+    private Identifier identifier;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "state_id", nullable = false)
@@ -36,4 +38,13 @@ public class Payment extends AbstractModel {
     @JoinColumn(name = "payment_type_id", nullable = false)
     @NotNull(message = "Payment type is required")
     private PaymentType paymentType;
+    
+    @Column(name = "image_filename")
+    private String imageFilename;
+    
+    @Column(name = "original_filename")
+    private String originalFilename;
+    
+    @Column(name = "amount", precision = 10, scale = 2)
+    private java.math.BigDecimal amount;
 } 

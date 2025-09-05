@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -216,6 +217,24 @@ public class AdminServiceImpl extends BaseServiceImpl<Admin, AdminResponse, Long
             stateService.findById(stateId);
         } catch (EntityNotFoundException e) {
             throw new EntityNotFoundException("State with ID " + stateId + " not found");
+        }
+    }
+    
+    @Override
+    public boolean isActiveAdminByAuthId(Long authId) {
+        try {
+            Optional<Admin> adminOptional = adminRepository.findByAuthId(authId);
+            if (adminOptional.isEmpty()) {
+                return false;
+            }
+            
+            Admin admin = adminOptional.get();
+            // Verificar se o admin está ativo (state_id = 1)
+            return admin.getState() != null && admin.getState().getId().equals(1L);
+        } catch (Exception e) {
+            // Usar System.out.println ao invés de log que não está disponível
+            System.err.println("Error checking admin status for auth ID: " + authId + " - " + e.getMessage());
+            return false;
         }
     }
 } 

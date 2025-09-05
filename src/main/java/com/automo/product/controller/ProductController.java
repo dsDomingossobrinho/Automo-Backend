@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -66,5 +67,25 @@ public class ProductController {
     @GetMapping("/state/{stateId}")
     public ResponseEntity<List<ProductResponse>> getProductsByState(@PathVariable Long stateId) {
         return ResponseEntity.ok(productService.getProductsByState(stateId));
+    }
+
+    @Operation(description = "Upload product image", summary = "Upload an image file for a specific product")
+    @ApiResponse(responseCode = "200", description = "Image uploaded successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid file type or size")
+    @PostMapping("/{id}/upload-image")
+    public ResponseEntity<ProductResponse> uploadProductImage(
+            @PathVariable Long id,
+            @RequestParam("image") MultipartFile imageFile) {
+        
+        if (imageFile.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        try {
+            ProductResponse response = productService.uploadProductImage(id, imageFile);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 } 

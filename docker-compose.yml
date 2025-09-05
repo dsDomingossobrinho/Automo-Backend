@@ -31,12 +31,13 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@automo.com
       PGADMIN_DEFAULT_PASSWORD: admin123
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_SERVER_MODE: 'True'
+      PGADMIN_SERVER_JSON_FILE: /pgladmin4/servers.json
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - ./servers.json:/pgladmin4/servers.json:ro
     networks:
       - automo-network
 
@@ -70,14 +71,16 @@ services:
       ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD:-admin123}
       
       # Email Configuration (Override in production)
-      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USERNAME: ${MAIL_USERNAME:-no-reply@automo.com}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-your-email-password}
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: adaseach@gmail.com
+      SPRING_MAIL_PASSWORD: zwzw rzdr lich qkqs
+      MAIL_AUTH: true
+      MAIL_STARTTLS_ENABLE: true
       
       # SMS Configuration
-      SMS_ENABLED: ${SMS_ENABLED:-false}
-      SMS_API_KEY: ${SMS_API_KEY:-your-sms-api-key}
+      SMS_ENABLED: false
+      SMS_API_KEY: your-sms-api-key
       
       # CORS Configuration
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:4200}

@@ -82,4 +82,24 @@ public interface DealRepository extends JpaRepository<Deal, Long> {
     List<Deal> findByIdentifierId(Long identifierId);
     List<Deal> findByLeadId(Long leadId);
     List<Deal> findByPromotionId(Long promotionId);
+    
+    // === MÉTODOS DE ESTATÍSTICAS DE AGENTE ===
+    
+    /**
+     * Calcula a média de mensagens para fechamento de negócios por agente
+     */
+    @Query("SELECT AVG(d.messageCount) FROM Deal d WHERE d.identifier.userId = :agentId AND d.state.state != 'ELIMINATED'")
+    Double calculateAverageMessagesPerDealByAgent(@Param("agentId") Long agentId);
+    
+    /**
+     * Conta o total de negócios fechados por agente
+     */
+    @Query("SELECT COUNT(d) FROM Deal d WHERE d.identifier.userId = :agentId AND d.state.state != 'ELIMINATED'")
+    long countDealsClosedByAgent(@Param("agentId") Long agentId);
+    
+    /**
+     * Calcula a média global de mensagens para fechamento de negócios
+     */
+    @Query("SELECT AVG(d.messageCount) FROM Deal d WHERE d.state.state != 'ELIMINATED'")
+    Double calculateGlobalAverageMessagesPerDeal();
 } 

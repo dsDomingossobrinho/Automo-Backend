@@ -3,6 +3,7 @@ package com.automo.product.service;
 import com.automo.product.dto.ProductDto;
 import com.automo.product.entity.Product;
 import com.automo.product.response.ProductResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,6 +22,11 @@ public interface ProductService {
     List<ProductResponse> getProductsByState(Long stateId);
 
     void deleteProduct(Long id);
+    
+    /**
+     * Upload de imagem para produto
+     */
+    ProductResponse uploadProductImage(Long productId, MultipartFile imageFile);
     
     /**
      * Busca Product por ID - método obrigatório para comunicação entre services

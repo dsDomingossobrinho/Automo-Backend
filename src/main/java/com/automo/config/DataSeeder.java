@@ -65,6 +65,7 @@ public class DataSeeder {
         this.initializeOrganizationTypes();
         this.initializeIdentifierTypes();
         this.initializeAdminUser();
+        this.initializeAdditionalAdmins();
         
         log.info("✅ Inicialização de dados concluída!");
     }
@@ -2662,6 +2663,117 @@ public class DataSeeder {
             log.info("✅ Usuário administrador criado com sucesso!");
             log.info("📧 Email: {}", DEFAULT_EMAIL_ADMIN);
             log.info("🔑 Senha: {}", DEFAULT_PASSWORD_ADMIN);
+        }
+    }
+
+    private void initializeAdditionalAdmins() {
+        log.info("👥 Verificando admins adicionais...");
+
+        // Admin 2: domingossobrinhods@gmail.com
+        if (!authRepository.existsByEmail("domingossobrinhods@gmail.com")) {
+            log.info("👤 Criando admin adicional: domingossobrinhods@gmail.com...");
+
+            State activeState = stateRepository.findByState("ACTIVE")
+                    .orElseThrow(() -> new RuntimeException("Estado ACTIVE não encontrado"));
+
+            Role adminRole = roleRepository.findByRole("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Role ADMIN não encontrado"));
+
+            AccountType adminAccount = accountTypeRepository.findByType("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Tipo de conta ADMIN não encontrado"));
+
+            // Criar Auth
+            Auth adminAuth = new Auth();
+            adminAuth.setEmail("domingossobrinhods@gmail.com");
+            adminAuth.setUsername("domingossobrinho");
+            adminAuth.setPassword(passwordEncoder.encode("Domingo123"));
+            adminAuth.setContact("+244987654321");
+            adminAuth.setAccountType(adminAccount);
+            adminAuth.setState(activeState);
+            authRepository.save(adminAuth);
+
+            // Criar associação AuthRoles
+            AuthRoles adminAuthRoles = new AuthRoles();
+            adminAuthRoles.setAuth(adminAuth);
+            adminAuthRoles.setRole(adminRole);
+            adminAuthRoles.setState(activeState);
+            authRolesRepository.save(adminAuthRoles);
+
+            // Criar Admin
+            Admin adminUser = new Admin();
+            adminUser.setName("Domingos Sobrinho");
+            adminUser.setEmail("domingossobrinhods@gmail.com");
+            adminUser.setAuth(adminAuth);
+            adminUser.setState(activeState);
+            adminRepository.save(adminUser);
+
+            // Criar Identifier
+            IdentifierType adminType = identifierTypeRepository.findByType("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Tipo de identificador ADMIN não encontrado"));
+
+            Identifier adminIdentifier = new Identifier();
+            adminIdentifier.setUserId(adminUser.getId());
+            adminIdentifier.setIdentifierType(adminType);
+            adminIdentifier.setState(activeState);
+            identifierRepository.save(adminIdentifier);
+
+            log.info("✅ Admin adicional criado com sucesso!");
+            log.info("📧 Email: domingossobrinhods@gmail.com");
+            log.info("🔑 Senha: Domingo123");
+        }
+
+        // Admin 3: Agent IA
+        if (!authRepository.existsByEmail("agentia@automo.com")) {
+            log.info("👤 Criando admin Agent IA: agentia@automo.com...");
+
+            State activeState = stateRepository.findByState("ACTIVE")
+                    .orElseThrow(() -> new RuntimeException("Estado ACTIVE não encontrado"));
+
+            Role adminRole = roleRepository.findByRole("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Role ADMIN não encontrado"));
+
+            AccountType adminAccount = accountTypeRepository.findByType("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Tipo de conta ADMIN não encontrado"));
+
+            // Criar Auth
+            Auth adminAuth = new Auth();
+            adminAuth.setEmail("agentia@automo.com");
+            adminAuth.setUsername("agentia");
+            adminAuth.setPassword(passwordEncoder.encode("AgentIA2024"));
+            adminAuth.setContact("+244999888777");
+            adminAuth.setAccountType(adminAccount);
+            adminAuth.setState(activeState);
+            authRepository.save(adminAuth);
+
+            // Criar associação AuthRoles
+            AuthRoles adminAuthRoles = new AuthRoles();
+            adminAuthRoles.setAuth(adminAuth);
+            adminAuthRoles.setRole(adminRole);
+            adminAuthRoles.setState(activeState);
+            authRolesRepository.save(adminAuthRoles);
+
+            // Criar Admin
+            Admin adminUser = new Admin();
+            adminUser.setName("Agent IA");
+            adminUser.setEmail("agentia@automo.com");
+            adminUser.setAuth(adminAuth);
+            adminUser.setState(activeState);
+            adminRepository.save(adminUser);
+
+            // Criar Identifier
+            IdentifierType adminType = identifierTypeRepository.findByType("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Tipo de identificador ADMIN não encontrado"));
+
+            Identifier adminIdentifier = new Identifier();
+            adminIdentifier.setUserId(adminUser.getId());
+            adminIdentifier.setIdentifierType(adminType);
+            adminIdentifier.setState(activeState);
+            identifierRepository.save(adminIdentifier);
+
+            log.info("✅ Admin Agent IA criado com sucesso!");
+            log.info("📧 Email: agentia@automo.com");
+            log.info("🔑 Senha: AgentIA2024");
+            log.info("👤 Nome: Agent IA");
         }
     }
 } 

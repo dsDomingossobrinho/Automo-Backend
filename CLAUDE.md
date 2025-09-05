@@ -79,10 +79,34 @@ Base package: `com.automo`
 - **JWT Utils**: Use `JwtUtils` bean to access current user information
 - **Multi-Role Support**: Users can have multiple roles (ADMIN, USER, AGENT, MANAGER)
 - **Account Types**: Back Office (INDIVIDUAL) vs Corporate (CORPORATE)
-- **Login Endpoints**: 
-  - `/auth/login` - General authentication
-  - `/auth/login/backoffice` - Back Office only
-  - `/auth/login/user` - Corporate users only
+- **OTP System**: One-Time Password authentication with email/SMS support
+- **Password Recovery**: OTP-based password reset functionality
+
+### Authentication Endpoints
+#### **Direct Login**
+- `/auth/login` - Direct authentication with credentials
+
+#### **OTP-Based Login**
+- `/auth/login/request-otp` - Request OTP for general authentication
+- `/auth/login/verify-otp` - Verify OTP and authenticate
+- `/auth/login/resend-otp` - Resend OTP for general authentication
+
+#### **Back Office OTP Login**
+- `/auth/login/backoffice/request-otp` - Request OTP for Back Office
+- `/auth/login/backoffice/verify-otp` - Verify OTP and authenticate Back Office
+- `/auth/login/backoffice/resend-otp` - Resend OTP for Back Office
+
+#### **Corporate User OTP Login**
+- `/auth/login/user/request-otp` - Request OTP for corporate users
+- `/auth/login/user/verify-otp` - Verify OTP and authenticate corporate user
+- `/auth/login/user/resend-otp` - Resend OTP for corporate users
+
+#### **Password Recovery**
+- `/auth/forgot-password` - Request OTP for password recovery
+- `/auth/reset-password` - Reset password with OTP verification
+
+#### **Other**
+- `/auth/register` - User registration
 
 ### Role-Based Access Control
 ```java

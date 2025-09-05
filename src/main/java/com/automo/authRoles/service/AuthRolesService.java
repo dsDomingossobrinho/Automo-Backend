@@ -37,4 +37,19 @@ public interface AuthRolesService {
      * Cria um AuthRoles com entidades já resolvidas - usado pelo AuthService
      */
     void createAuthRolesWithEntities(com.automo.auth.entity.Auth auth, com.automo.role.entity.Role role, com.automo.state.entity.State state);
+    
+    /**
+     * Busca todas as entidades AuthRoles por Auth ID - retorna entidades para service-to-service communication
+     */
+    List<com.automo.authRoles.entity.AuthRoles> findByAuthId(Long authId);
+    
+    /**
+     * Salva entidade AuthRoles - usado pelo AuthService
+     */
+    com.automo.authRoles.entity.AuthRoles save(com.automo.authRoles.entity.AuthRoles authRoles);
+    
+    /**
+     * Remove entidade AuthRoles - usado pelo AuthService
+     */
+    void delete(com.automo.authRoles.entity.AuthRoles authRoles);
 } 
