@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="500" height="300" viewBox="0 0 500 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="paint0_linear_1_1" x1="122" y1="154" x2="338" y2="288" gradientUnits="userSpaceOnUse">
+<stop stop-color="#00BCD4"/>
+<stop offset="1" stop-color="#2196F3"/>
+</linearGradient>
+<linearGradient id="paint1_linear_1_1" x1="228" y1="230" x2="294" y2="254" gradientUnits="userSpaceOnUse">
+<stop stop-color="#2196F3"/>
+<stop offset="1" stop-color="#9CAFF4"/>
+</linearGradient>
+</defs>
+<!-- A Letter -->
+<path d="M122 288L199 154L247 154L338 288H300L268 230H178L146 288H122Z" fill="url(#paint0_linear_1_1)"/>
+<!-- A Inner triangle -->
+<path d="M228 230H218L223 190H223H228H254L254 230H228Z" fill="white"/>
+<!-- Stylized stroke -->
+<path d="M228 230H294C284 242 274 254 254 254H228V230Z" fill="url(#paint1_linear_1_1)"/>
+<!-- Text -->
+<text x="360" y="190" font-family="Arial, sans-serif" font-size="24" font-weight="300" fill="white">auto</text>
+<text x="360" y="220" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#2196F3">mo</text>
+<text x="430" y="220" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#9CAFF4">o</text>
+</svg>

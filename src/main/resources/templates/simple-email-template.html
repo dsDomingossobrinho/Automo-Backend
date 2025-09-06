@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{SUBJECT}} - Automo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #00bcd4 0%, #2196f3 100%);
+            color: #333;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #00bcd4 0%, #2196f3 100%);
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .logo {
+            width: 150px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: white;
+            font-size: 28px;
+            font-weight: 300;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .content {
+            padding: 40px 30px;
+            line-height: 1.8;
+        }
+        .content h2 {
+            color: #2196f3;
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 20px;
+        }
+        .content p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .content-body {
+            white-space: pre-line;
+            font-size: 16px;
+            color: #666;
+            line-height: 1.8;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .company-name {
+            font-weight: bold;
+            color: #2196f3;
+            font-size: 16px;
+        }
+        .divider {
+            height: 2px;
+            background: linear-gradient(135deg, #00bcd4 0%, #2196f3 100%);
+            margin: 30px 0;
+            border: none;
+        }
+        .highlight {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f1f8e9 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            margin: 20px 0;
+        }
+        @media (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+            .header {
+                padding: 30px 15px;
+            }
+            .logo {
+                width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="{{LOGO_BASE64}}" alt="Automo Logo" class="logo">
+            <h1>{{SUBJECT}}</h1>
+        </div>
+        
+        <div class="content">
+            <div class="content-body">{{CONTENT}}</div>
+            
+            <hr class="divider">
+            
+            <div class="highlight">
+                💼 <strong>Automo - Sua solução em automobilismo</strong><br>
+                Transformando a experiência automotiva através da tecnologia.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="footer-text">Atenciosamente,</div>
+            <div class="company-name">Equipe Automo</div>
+        </div>
+    </div>
+</body>
+</html>

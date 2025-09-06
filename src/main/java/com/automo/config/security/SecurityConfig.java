@@ -95,8 +95,11 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health/**").permitAll()              // Status de saúde
                 .requestMatchers("/actuator/info").permitAll()                   // Informações da aplicação
                 
-                // 5. Endpoint de teste de email (público)
+                // 5. Endpoints de teste de email (público)
                 .requestMatchers("/test/email").permitAll()                      // Teste de configuração de email
+                .requestMatchers("/test/otp").permitAll()                        // Teste de OTP email
+                .requestMatchers("/test/clear-logo-cache").permitAll()           // Limpar cache da logo
+                .requestMatchers("/test/test-logo").permitAll()                  // Testar carregamento da logo
                 
                 // ========================================
                 // ROTAS PROTEGIDAS (COM AUTENTICAÇÃO)

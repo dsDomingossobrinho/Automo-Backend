@@ -8,9 +8,9 @@ public record AdminResponse(
     String name,
     String img,
     Long authId,
-    String authUsername,
+    String username,
     Long stateId,
-    String stateName,
+    String state,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {} 

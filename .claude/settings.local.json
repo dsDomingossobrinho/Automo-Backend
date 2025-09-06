@@ -4,7 +4,9 @@
       "Bash(find:*)",
       "Bash(docker-compose:*)",
       "Bash(curl:*)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "Read(//c//**)",
+      "Bash(./mvnw test:*)"
     ],
     "deny": [],
     "ask": []

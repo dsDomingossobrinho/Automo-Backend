@@ -1,5 +1,7 @@
 package com.automo.lead.service;
 
+import com.automo.identifier.entity.Identifier;
+import com.automo.identifier.service.IdentifierService;
 import com.automo.lead.dto.LeadDto;
 import com.automo.lead.entity.Lead;
 import com.automo.lead.repository.LeadRepository;
@@ -20,16 +22,18 @@ import java.util.stream.Collectors;
 public class LeadServiceImpl implements LeadService {
 
     private final LeadRepository leadRepository;
+    private final IdentifierService identifierService;
     private final LeadTypeService leadTypeService;
     private final StateService stateService;
 
     @Override
     public LeadResponse createLead(LeadDto leadDto) {
+        Identifier identifier = identifierService.findById(leadDto.identifierId());
         LeadType leadType = leadTypeService.findById(leadDto.leadTypeId());
-
         State state = stateService.findById(leadDto.stateId());
 
         Lead lead = new Lead();
+        lead.setIdentifier(identifier);
         lead.setName(leadDto.name());
         lead.setEmail(leadDto.email());
         lead.setContact(leadDto.contact());
@@ -45,10 +49,11 @@ public class LeadServiceImpl implements LeadService {
     public LeadResponse updateLead(Long id, LeadDto leadDto) {
         Lead lead = this.getLeadById(id);
         
+        Identifier identifier = identifierService.findById(leadDto.identifierId());
         LeadType leadType = leadTypeService.findById(leadDto.leadTypeId());
-
         State state = stateService.findById(leadDto.stateId());
 
+        lead.setIdentifier(identifier);
         lead.setName(leadDto.name());
         lead.setEmail(leadDto.email());
         lead.setContact(leadDto.contact());
